@@ -1,0 +1,25 @@
+*.swp
+.~lock*
+package-lock.json
+__pycache__
+.pytest_cache
+.env
+*.egg-info
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+# generated test files
+test/template.yaml
+test/taskcat_outputs
+test/main-test/template.yaml
+test/main-test/taskcat_outputs
+test/regions-test/template.yaml
+test/regions-test/taskcat_outputs
+
+# distributed files
+dist/*
+
+# packer manifest file
+manifest.json

@@ -24,10 +24,6 @@ setuptools.setup(
         f"aws-cdk.aws-cloudformation=={CDK_VERSION}",
         f"aws-cdk.aws-cloudfront=={CDK_VERSION}",
         f"aws-cdk.aws-cloudwatch=={CDK_VERSION}",
-        f"aws-cdk.aws-codebuild=={CDK_VERSION}",
-        f"aws-cdk.aws-codedeploy=={CDK_VERSION}",
-        f"aws-cdk.aws-codepipeline-actions=={CDK_VERSION}",
-        f"aws-cdk.aws-codepipeline=={CDK_VERSION}",
         f"aws-cdk.aws-ec2=={CDK_VERSION}",
         f"aws-cdk.aws-efs=={CDK_VERSION}",
         f"aws-cdk.aws-elasticache=={CDK_VERSION}",
@@ -40,7 +36,7 @@ setuptools.setup(
         f"aws-cdk.aws-sns=={CDK_VERSION}",
         f"aws-cdk.aws-ssm=={CDK_VERSION}",
         f"aws-cdk.core=={CDK_VERSION}",
-        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@1.1.0"
+        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@feature/util#egg=1"
     ],
 
     python_requires=">=3.6",

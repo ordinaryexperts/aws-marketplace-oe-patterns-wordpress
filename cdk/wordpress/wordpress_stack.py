@@ -19,6 +19,7 @@ from aws_cdk import (
     aws_secretsmanager,
     aws_sns,
     aws_ssm,
+    aws_transfer,
     core
 )
 
@@ -249,6 +250,17 @@ class WordPressStack(core.Stack):
             "SourceArtifactObjectKey",
             default="wordpress.zip",
             description="Required: AWS S3 Object key (path) for the build artifact for the application.  Updates to this object will trigger a deployment."
+        )
+        transfer_user_name_param = core.CfnParameter(
+            self,
+            "TransferUserName",
+            description="Required: AWS Transfer user name for uploading site files via SFTP."
+        )
+        transfer_user_ssh_public_key_param = core.CfnParameter(
+            self,
+            "TransferUserSshPublicKey",
+            description="Required: AWS Transfer user SSH public key for uploading site files via SFTP.",
+            no_echo=True
         )
 
         #
@@ -1277,6 +1289,104 @@ class WordPressStack(core.Stack):
             service_token=initialize_default_wordpress_lambda_function.attr_arn
         )
         initialize_default_wordpress_custom_resource.cfn_options.condition = initialize_default_wordpress_condition
+
+        # transfer
+        transfer_home_directory = f"/{source_artifact_bucket_name}/{core.Aws.STACK_NAME}/wordpress"
+        transfer_sftp_role = aws_iam.CfnRole(
+            self,
+            "TransferSftpRole",
+            assume_role_policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[ "sts:AssumeRole" ],
+                        principals=[ aws_iam.ServicePrincipal("transfer.amazonaws.com") ]
+                    )
+                ]
+            ),
+            policies=[
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "s3:ListBucket",
+                                    "s3:GetBucketLocation"
+                                ],
+                                resources=[ source_artifact_bucket_arn ]
+                            )
+                        ]
+                    ),
+                    policy_name="AllowListingOfUserFolder"
+                ),
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "s3:DeleteObject",
+                                    "s3:GetObject",
+                                    "s3:GetObjectVersion",
+                                    "s3:PutObject"
+                                ],
+                                # TODO: lock down object access
+                                resources=[ f"{source_artifact_bucket_arn}/*" ]
+                            )
+                        ]
+                    ),
+                    policy_name="HomeDirObjectAccess"
+                )
+            ]
+        )
+        transfer_logging_role = aws_iam.CfnRole(
+            self,
+            "TransferLoggingRole",
+            assume_role_policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[ "sts:AssumeRole" ],
+                        principals=[ aws_iam.ServicePrincipal("transfer.amazonaws.com") ]
+                    )
+                ]
+            ),
+            policies=[
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "logs:CreateLogGroup",
+                                    "logs:CreateLogStream",
+                                    "logs:DescribeLogStreams",
+                                    "logs:PutLogEvents"
+                                ],
+                                resources=[ "arn:aws:logs:*:*:log-group:/aws/transfer/*" ]
+                            )
+                        ]
+                    ),
+                    policy_name="AllowTransferLogging"
+                )
+            ]
+        )
+        transfer_server = aws_transfer.CfnServer(
+            self,
+            "TransferSftpServer",
+            logging_role=transfer_logging_role.attr_arn,
+            protocols=[ "SFTP" ]
+        )
+        transfer_user = aws_transfer.CfnUser(
+            self,
+            "TransferSftpUser",
+            home_directory=transfer_home_directory,
+            role=transfer_sftp_role.attr_arn,
+            server_id=transfer_server.attr_server_id,
+            ssh_public_keys=[ transfer_user_ssh_public_key_param.value_as_string ],
+            user_name=transfer_user_name_param.value_as_string,
+        )
 
         #
         # OUTPUTS

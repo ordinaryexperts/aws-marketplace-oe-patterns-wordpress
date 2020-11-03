@@ -69,6 +69,8 @@ deploy: build
 	--parameters InitializeDefaultWordPress=true \
 	--parameters SourceArtifactBucketName=github-user-and-bucket-githubartifactbucket-wl52dae3lyub \
 	--parameters SourceArtifactObjectKey=aws-marketplace-oe-patterns-wordpress-example-site/refs/heads/develop.zip \
+	--parameters TransferUserName=${USER} \
+	--parameters TransferUserSshPublicKey="$(shell cat ~/.ssh/id_rsa.pub)" \
 	--parameters VpcId=vpc-00425deda4c835455 \
 	--parameters VpcPrivateSubnetId1=subnet-030c94b9795c6cb96 \
 	--parameters VpcPrivateSubnetId2=subnet-079290412ce63c4d5 \

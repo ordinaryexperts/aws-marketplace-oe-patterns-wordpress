@@ -35,6 +35,7 @@ setuptools.setup(
         f"aws-cdk.aws-secretsmanager=={CDK_VERSION}",
         f"aws-cdk.aws-sns=={CDK_VERSION}",
         f"aws-cdk.aws-ssm=={CDK_VERSION}",
+        f"aws-cdk.aws-transfer=={CDK_VERSION}",
         f"aws-cdk.core=={CDK_VERSION}",
         f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@feature/util#egg=1"
     ],

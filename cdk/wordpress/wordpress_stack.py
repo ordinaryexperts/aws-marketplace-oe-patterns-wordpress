@@ -1417,6 +1417,11 @@ class WordPressStack(core.Stack):
             "SourceArtifactBucketNameOutput",
             value=source_artifact_bucket_name
         )
+        transfer_server_endpoint_output = core.CfnOutput(
+            self,
+            "TransferServerEndpointOutput",
+            value=f"{transfer_server.attr_server_id}.server.transfer.{core.Aws.REGION}.amazonaws.com"
+        )
         
         # AWS::CloudFormation::Interface
         self.template_options.metadata = {

@@ -1291,7 +1291,7 @@ class WordPressStack(core.Stack):
         initialize_default_wordpress_custom_resource.cfn_options.condition = initialize_default_wordpress_condition
 
         # transfer
-        transfer_home_directory = f"/{source_artifact_bucket_name}/{core.Aws.STACK_NAME}/wordpress"
+        transfer_home_directory = f"{core.Aws.STACK_NAME}/wordpress"
         transfer_sftp_role = aws_iam.CfnRole(
             self,
             "TransferSftpRole",
@@ -1331,8 +1331,7 @@ class WordPressStack(core.Stack):
                                     "s3:GetObjectVersion",
                                     "s3:PutObject"
                                 ],
-                                # TODO: lock down object access
-                                resources=[ f"{source_artifact_bucket_arn}/*" ]
+                                resources=[ f"{source_artifact_bucket_arn}/{transfer_home_directory}/*" ]
                             )
                         ]
                     ),
@@ -1381,7 +1380,7 @@ class WordPressStack(core.Stack):
         transfer_user = aws_transfer.CfnUser(
             self,
             "TransferSftpUser",
-            home_directory=transfer_home_directory,
+            home_directory=f"/{source_artifact_bucket_name}/{transfer_home_directory}",
             role=transfer_sftp_role.attr_arn,
             server_id=transfer_server.attr_server_id,
             ssh_public_keys=[ transfer_user_ssh_public_key_param.value_as_string ],

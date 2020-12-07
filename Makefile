@@ -67,6 +67,7 @@ deploy: build
 	--parameters CloudFrontEnable=false \
 	--parameters ElastiCacheEnable=false \
 	--parameters InitializeDefaultWordPress=true \
+  --parameters PipelineArtifactBucketName=github-user-and-bucket-taskcatbucket-2zppaw3wi3sx \
 	--parameters SourceArtifactBucketName=github-user-and-bucket-githubartifactbucket-wl52dae3lyub \
 	--parameters SourceArtifactObjectKey=aws-marketplace-oe-patterns-wordpress-example-site/refs/heads/develop.zip \
 	--parameters TransferUserName=${USER} \

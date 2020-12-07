@@ -7,6 +7,10 @@ from aws_cdk import (
     aws_cloudformation,
     aws_cloudfront,
     aws_cloudwatch,
+    aws_codebuild,
+    aws_codedeploy,
+    aws_codepipeline,
+    aws_codepipeline_actions,
     aws_ec2,
     aws_efs,
     aws_elasticache,
@@ -98,6 +102,14 @@ class WordPressStack(core.Stack):
             "AWSAMIRegionMap",
             mapping=ami_mapping
         )
+
+        # utility function to parse the unique id from the stack id for
+        # shorter resource names using cloudformation functions
+        def append_stack_uuid(name):
+            return core.Fn.join("-", [
+                name,
+                core.Fn.select(2, core.Fn.split("/", core.Aws.STACK_ID))
+            ])
 
         #
         # PARAMETERS
@@ -233,6 +245,12 @@ class WordPressStack(core.Stack):
             default="",
             description="Optional: Specify an email address to get emails about deploys and other system events."
         )
+        pipeline_artifact_bucket_name_param = core.CfnParameter(
+            self,
+            "PipelineArtifactBucketName",
+            default="",
+            description="Optional: Specify a bucket name for the CodePipeline pipeline to use. The bucket must be in this same AWS account. This can be handy when re-creating this template many times."
+        )
         secret_arn_param = core.CfnParameter(
             self,
             "SecretArn",
@@ -309,6 +327,16 @@ class WordPressStack(core.Stack):
             "NotificationEmailExists",
             expression=core.Fn.condition_not(core.Fn.condition_equals(notification_email_param.value, ""))
         )
+        pipeline_artifact_bucket_name_not_exists_condition = core.CfnCondition(
+            self,
+            "PipelineArtifactBucketNameNotExists",
+            expression=core.Fn.condition_equals(pipeline_artifact_bucket_name_param.value, "")
+        )
+        pipeline_artifact_bucket_name_exists_condition = core.CfnCondition(
+            self,
+            "PipelineArtifactBucketNameExists",
+            expression=core.Fn.condition_not(core.Fn.condition_equals(pipeline_artifact_bucket_name_param.value, ""))
+        )
         secret_arn_exists_condition = core.CfnCondition(
             self,
             "SecretArnExistsCondition",
@@ -367,6 +395,40 @@ class WordPressStack(core.Stack):
         # RESOURCES
         #
 
+        pipeline_artifact_bucket = aws_s3.CfnBucket(
+            self,
+            "PipelineArtifactBucket",
+            access_control="Private",
+            bucket_encryption=aws_s3.CfnBucket.BucketEncryptionProperty(
+                server_side_encryption_configuration=[
+                    aws_s3.CfnBucket.ServerSideEncryptionRuleProperty(
+                        server_side_encryption_by_default=aws_s3.CfnBucket.ServerSideEncryptionByDefaultProperty(
+                            sse_algorithm="AES256"
+                        )
+                    )
+                ]
+            ),
+            public_access_block_configuration=aws_s3.BlockPublicAccess.BLOCK_ALL
+        )
+        pipeline_artifact_bucket.cfn_options.condition=pipeline_artifact_bucket_name_not_exists_condition
+        pipeline_artifact_bucket.cfn_options.deletion_policy = core.CfnDeletionPolicy.RETAIN
+        pipeline_artifact_bucket.cfn_options.update_replace_policy = core.CfnDeletionPolicy.RETAIN
+        pipeline_artifact_bucket_arn = core.Arn.format(
+            components=core.ArnComponents(
+                account="",
+                region="",
+                resource=core.Token.as_string(
+                    core.Fn.condition_if(
+                        pipeline_artifact_bucket_name_exists_condition.logical_id,
+                        pipeline_artifact_bucket_name_param.value_as_string,
+                        pipeline_artifact_bucket.ref
+                    )
+                ),
+                resource_name="*",
+                service="s3"
+            ),
+            stack=self
+        )
         source_artifact_bucket = aws_s3.CfnBucket(
             self,
             "SourceArtifactBucket",
@@ -919,6 +981,21 @@ class WordPressStack(core.Stack):
                     policy_name="CloudFrontInvalidation"
                 ),
                 aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "codepipeline:PutJobSuccessResult",
+                                    "codepipeline:PutJobFailureResult"
+                                ],
+                                resources=[ "*" ]
+                            )
+                        ]
+                    ),
+                    policy_name="CodePipelineResult"
+                ),
+                aws_iam.CfnRole.PolicyProperty(
                     policy_document=iam_notification_publish_policy,
                     policy_name="SnsPublishToNotificationTopic"
                 )
@@ -998,6 +1075,21 @@ class WordPressStack(core.Stack):
                         ]
                     ),
                     policy_name="AllowStreamMetricsToCloudWatch"
+                ),
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "s3:Get*",
+                                    "s3:Head*"
+                                ],
+                                resources=[ pipeline_artifact_bucket_arn ]
+                            )
+                        ]
+                    ),
+                    policy_name="AllowGetFromArtifactBucket",
                 ),
                 aws_iam.CfnRole.PolicyProperty(
                     policy_document=aws_iam.PolicyDocument(
@@ -1213,6 +1305,493 @@ class WordPressStack(core.Stack):
         )
         sg_https_ingress.cfn_options.condition = certificate_arn_exists_condition
 
+        # codebuild
+        codebuild_transform_service_role = aws_iam.CfnRole(
+            self,
+            "CodeBuildTransformServiceRole",
+            assume_role_policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[ "sts:AssumeRole" ],
+                        principals=[ aws_iam.ServicePrincipal("codebuild.amazonaws.com") ]
+                    )
+                ]
+            ),
+            policies=[
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "logs:CreateLogGroup",
+                                    "logs:CreateLogStream",
+                                    "logs:PutLogEvents"
+                                ],
+                                resources=[ "*" ]
+                            ),
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "s3:GetObject",
+                                    "s3:PutObject"
+                                ],
+                                resources=[ pipeline_artifact_bucket_arn ]
+                            )
+                        ]
+                    ),
+                    policy_name="TransformRolePermssions"
+                )
+            ]
+        )
+        codebuild_transform_service_role_arn = core.Arn.format(
+            components=core.ArnComponents(
+                account=core.Aws.ACCOUNT_ID,
+                region="",
+                resource="role",
+                resource_name=codebuild_transform_service_role.ref,
+                service="iam"
+            ),
+            stack=self
+        )
+        with open("wordpress/codebuild_transform_project_buildspec.yml") as f:
+            codebuild_transform_project_buildspec = f.read()
+        codebuild_transform_project = aws_codebuild.CfnProject(
+            self,
+            "CodeBuildTransformProject",
+            artifacts=aws_codebuild.CfnProject.ArtifactsProperty(
+                type="CODEPIPELINE",
+            ),
+            environment=aws_codebuild.CfnProject.EnvironmentProperty(
+                compute_type="BUILD_GENERAL1_SMALL",
+                environment_variables=[
+                    aws_codebuild.CfnProject.EnvironmentVariableProperty(
+                        name="AUTO_SCALING_GROUP_NAME",
+                        value=asg.ref,
+                    )
+                ],
+                image="aws/codebuild/standard:4.0",
+                type="LINUX_CONTAINER"
+            ),
+            name="{}-transform".format(core.Aws.STACK_NAME),
+            service_role=codebuild_transform_service_role_arn,
+            source=aws_codebuild.CfnProject.SourceProperty(
+                build_spec=codebuild_transform_project_buildspec,
+                type="CODEPIPELINE"
+            )
+        )
+
+        # codepipeline
+        codepipeline_role = aws_iam.CfnRole(
+            self,
+            "PipelineRole",
+            assume_role_policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[ "sts:AssumeRole" ],
+                        principals=[ aws_iam.ServicePrincipal("codepipeline.amazonaws.com") ]
+                    )
+                ]
+            ),
+            policies=[
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "codebuild:BatchGetBuilds",
+                                    "codebuild:StartBuild",
+                                    "codedeploy:GetApplication",
+                                    "codedeploy:GetDeploymentGroup",
+                                    "codedeploy:ListApplications",
+                                    "codedeploy:ListDeploymentGroups",
+                                    "codepipeline:*",
+                                    "iam:ListRoles",
+                                    "iam:PassRole",
+                                    "lambda:GetFunctionConfiguration",
+                                    "lambda:ListFunctions",
+                                    "s3:CreateBucket",
+                                    "s3:GetBucketPolicy",
+                                    "s3:GetObject",
+                                    "s3:ListAllMyBuckets",
+                                    "s3:ListBucket",
+                                    "s3:PutBucketPolicy"
+                                ],
+                                resources=[ "*" ]
+                            )
+                        ]
+                    ),
+                    policy_name="CodePipelinePerms"
+                )
+            ]
+        )
+        codepipeline_role_arn = core.Arn.format(
+            components=core.ArnComponents(
+                account=core.Aws.ACCOUNT_ID,
+                region="",
+                resource="role",
+                resource_name=codepipeline_role.ref,
+                service="iam"
+            ),
+            stack=self
+        )
+        codepipeline_source_stage_role = aws_iam.CfnRole(
+            self,
+            "SourceStageRole",
+            assume_role_policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[ "sts:AssumeRole" ],
+                        principals=[ aws_iam.ArnPrincipal(codepipeline_role_arn) ]
+                    )
+                ],
+            ),
+            policies=[
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "s3:Get*",
+                                    "s3:Head*"
+                                ],
+                                resources=[ source_artifact_object_key_arn ]
+                            ),
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[ "s3:GetBucketVersioning" ],
+                                resources=[
+                                    core.Arn.format(
+                                        components=core.ArnComponents(
+                                            account="",
+                                            region="",
+                                            resource=source_artifact_bucket_name,
+                                            service="s3"
+                                        ),
+                                        stack=self
+                                    )
+                                ]
+                            ),
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[ "s3:*" ],
+                                resources=[ pipeline_artifact_bucket_arn ]
+                            )
+                        ]
+                    ),
+                    policy_name="SourceRolePerms"
+                )
+            ]
+        )
+        codepipeline_source_stage_role_arn = core.Arn.format(
+            components=core.ArnComponents(
+                account=core.Aws.ACCOUNT_ID,
+                region="",
+                resource="role",
+                resource_name=codepipeline_source_stage_role.ref,
+                service="iam"
+            ),
+            stack=self
+        )
+        codepipeline_deploy_stage_role = aws_iam.CfnRole(
+            self,
+            "DeployStageRole",
+            assume_role_policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[ "sts:AssumeRole" ],
+                        principals= [ aws_iam.ArnPrincipal(codepipeline_role_arn) ]
+                    )
+                ]
+            ),
+            policies=[
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[ "codedeploy:*" ],
+                                resources=[ "*" ]
+                            ),
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "s3:Get*",
+                                    "s3:Head*",
+                                    "s3:PutObject"
+                                ],
+                                resources=[ pipeline_artifact_bucket_arn ]
+                            )
+                        ]
+                    ),
+                    policy_name="DeployRolePerms"
+                )
+            ]
+        )
+        codepipeline_deploy_stage_role_arn = core.Arn.format(
+            components=core.ArnComponents(
+                account=core.Aws.ACCOUNT_ID,
+                region="",
+                resource="role",
+                resource_name=codepipeline_deploy_stage_role.ref,
+                service="iam"
+            ),
+            stack=self
+        )
+        codepipeline_finalize_stage_role = aws_iam.CfnRole(
+           self,
+           "CodePipelineFinalizeStageRole",
+            assume_role_policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[ "sts:AssumeRole" ],
+                        principals=[ aws_iam.ArnPrincipal(codepipeline_role_arn) ]
+                    )
+                ]
+            ),
+            policies=[
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[ "codedeploy:*" ],
+                                resources=[ "*" ]
+                            )
+                        ]
+                    ),
+                    policy_name="CodeDeploy"
+                ),
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[ "lambda:InvokeFunction" ],
+                                resources=[ cloudfront_invalidation_lambda_function.attr_arn ]
+                            )
+                        ]
+                    ),
+                    policy_name="InvokeCloudFrontInvalidationLambdaFunction",
+                )
+            ]
+        )
+        codepipeline_finalize_stage_role.cfn_options.condition = cloudfront_enable_condition
+        codepipeline_finalize_stage_role_arn = core.Arn.format(
+            components=core.ArnComponents(
+                account=core.Aws.ACCOUNT_ID,
+                region="",
+                resource="role",
+                resource_name=codepipeline_finalize_stage_role.ref,
+                service="iam"
+            ),
+            stack=self
+        )
+
+        codedeploy_application = aws_codedeploy.CfnApplication(
+            self,
+            "CodeDeployApplication",
+            application_name=core.Aws.STACK_NAME,
+            compute_platform="Server"
+        )
+        codedeploy_role = aws_iam.CfnRole(
+             self,
+            "CodeDeployRole",
+            assume_role_policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[ "sts:AssumeRole" ],
+                        principals=[ aws_iam.ServicePrincipal("codedeploy.{}.amazonaws.com".format(core.Aws.REGION)) ]
+                    )
+                ]
+            ),
+            policies=[
+                aws_iam.CfnRole.PolicyProperty(
+                    policy_document=aws_iam.PolicyDocument(
+                        statements=[
+                            aws_iam.PolicyStatement(
+                                effect=aws_iam.Effect.ALLOW,
+                                actions=[
+                                    "s3:GetObject",
+                                    "s3:PutObject"
+                                ],
+                                resources=[ pipeline_artifact_bucket_arn ]
+                            ),
+                        ]
+                    ),
+                    policy_name="DeployRolePermssions"
+                )
+            ],
+            managed_policy_arns=[ "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole" ]
+        )
+        codedeploy_role_arn = core.Arn.format(
+            components=core.ArnComponents(
+                account=core.Aws.ACCOUNT_ID,
+                region="",
+                resource="role",
+                resource_name=codedeploy_role.ref,
+                service="iam"
+            ),
+            stack=self
+        )
+        codedeploy_deployment_group = aws_codedeploy.CfnDeploymentGroup(
+            self,
+            "CodeDeployDeploymentGroup",
+            application_name=codedeploy_application.application_name,
+            auto_scaling_groups=[ asg.ref ],
+            deployment_group_name="{}-app".format(core.Aws.STACK_NAME),
+            deployment_config_name=aws_codedeploy.ServerDeploymentConfig.ALL_AT_ONCE.deployment_config_name,
+            service_role_arn=codedeploy_role_arn,
+            trigger_configurations=[
+                aws_codedeploy.CfnDeploymentGroup.TriggerConfigProperty(
+                    trigger_events=[
+                        "DeploymentSuccess",
+                        "DeploymentRollback"
+                    ],
+                    trigger_name="DeploymentNotification",
+                    trigger_target_arn=notification_topic.ref
+                )
+            ]
+        )
+        codepipeline = aws_codepipeline.CfnPipeline(
+            self,
+            "Pipeline",
+            artifact_store=aws_codepipeline.CfnPipeline.ArtifactStoreProperty(
+                location=core.Token.as_string(
+                    core.Fn.condition_if(
+                        pipeline_artifact_bucket_name_exists_condition.logical_id,
+                        pipeline_artifact_bucket_name_param.value_as_string,
+                        pipeline_artifact_bucket.ref
+                    )
+                ),
+                type="S3"
+            ),
+            role_arn=codepipeline_role_arn,
+            stages=[
+                aws_codepipeline.CfnPipeline.StageDeclarationProperty(
+                    name="Source",
+                    actions=[
+                        aws_codepipeline.CfnPipeline.ActionDeclarationProperty(
+                            action_type_id=aws_codepipeline.CfnPipeline.ActionTypeIdProperty(
+                                category="Source",
+                                owner="AWS",
+                                provider="S3",
+                                version="1"
+                            ),
+                            configuration={
+                                "S3Bucket": source_artifact_bucket_name,
+                                "S3ObjectKey": source_artifact_object_key_param.value_as_string
+                            },
+                            output_artifacts=[
+                                aws_codepipeline.CfnPipeline.OutputArtifactProperty(
+                                    name="build"
+                                )
+                            ],
+                            name="SourceAction",
+                            role_arn=codepipeline_source_stage_role_arn
+                        )
+                    ]
+                ),
+                aws_codepipeline.CfnPipeline.StageDeclarationProperty(
+                    name="Transform",
+                    actions=[
+                        aws_codepipeline.CfnPipeline.ActionDeclarationProperty(
+                            action_type_id=aws_codepipeline.CfnPipeline.ActionTypeIdProperty(
+                                category="Build",
+                                owner="AWS",
+                                provider="CodeBuild",
+                                version="1"
+                            ),
+                            configuration={
+                                "ProjectName": codebuild_transform_project.ref
+                            },
+                            input_artifacts=[
+                                aws_codepipeline.CfnPipeline.InputArtifactProperty(
+                                    name="build",
+                                )
+                            ],
+                            name="TransformAction",
+                            output_artifacts=[
+                                aws_codepipeline.CfnPipeline.OutputArtifactProperty(
+                                    name="transformed"
+                                )
+                            ]
+                        )
+                    ]
+                ),
+                aws_codepipeline.CfnPipeline.StageDeclarationProperty(
+                    name="Deploy",
+                    actions=[
+                        aws_codepipeline.CfnPipeline.ActionDeclarationProperty(
+                            action_type_id=aws_codepipeline.CfnPipeline.ActionTypeIdProperty(
+                                category="Deploy",
+                                owner="AWS",
+                                provider="CodeDeploy",
+                                version="1"
+                            ),
+                            configuration={
+                                "ApplicationName": codedeploy_application.ref,
+                                "DeploymentGroupName": codedeploy_deployment_group.ref,
+                            },
+                            input_artifacts=[
+                                aws_codepipeline.CfnPipeline.InputArtifactProperty(
+                                    name="transformed"
+                                )
+                            ],
+                            name="DeployAction",
+                            role_arn=codepipeline_deploy_stage_role_arn
+                        )
+                    ]
+                )
+            ]
+        )
+        # https://github.com/aws/aws-cdk/issues/8396
+        codepipeline.add_override(
+            "Properties.Stages.3",
+            {
+                "Fn::If": [
+                    cloudfront_enable_condition.logical_id,
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Invoke",
+                                    "Owner": "AWS",
+                                    "Provider": "Lambda",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "FunctionName": cloudfront_invalidation_lambda_function.ref
+                                },
+                                "Name": "CloudFrontInvalidationAction",
+                                "RoleArn": codepipeline_finalize_stage_role_arn
+                            }
+                        ],
+                        "Name": "Finalize"
+                    },
+                    core.Aws.NO_VALUE
+                ]
+            }
+        )
+        cloudfront_invalidation_lambda_permission = aws_lambda.CfnPermission(
+            self,
+            "CloudFrontInvalidationLambdaPermission",
+            action="lambda:InvokeFunction",
+            function_name=cloudfront_invalidation_lambda_function.attr_arn,
+            principal="events.amazonaws.com",
+            source_arn=codepipeline_role_arn
+        )
+        cloudfront_invalidation_lambda_permission.cfn_options.condition = cloudfront_enable_condition
+
+
         # default wordpress
         initialize_default_wordpress_lambda_function_role = aws_iam.CfnRole(
             self,
@@ -1422,7 +2001,7 @@ class WordPressStack(core.Stack):
             "TransferServerEndpointOutput",
             value=f"{transfer_server.attr_server_id}.server.transfer.{core.Aws.REGION}.amazonaws.com"
         )
-        
+
         # AWS::CloudFormation::Interface
         self.template_options.metadata = {
             "OE::Patterns::TemplateVersion": template_version,
@@ -1488,7 +2067,9 @@ class WordPressStack(core.Stack):
                         "Label": {
                             "default": "Template Development"
                         },
-                        "Parameters": []
+                        "Parameters": [
+                            pipeline_artifact_bucket_name_param.logical_id
+                        ]
                     }
                 ],
                 "ParameterLabels": {
@@ -1542,6 +2123,9 @@ class WordPressStack(core.Stack):
                     },
                     notification_email_param.logical_id: {
                         "default": "Notification Email"
+                    },
+                    pipeline_artifact_bucket_name_param.logical_id: {
+                        "default": "CodePipeline Bucket Name"
                     },
                     secret_arn_param.logical_id: {
                         "default": "SecretsManager secret ARN"

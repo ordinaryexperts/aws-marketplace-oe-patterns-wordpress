@@ -5,6 +5,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [ "$#" -ne 1 ]; then
     VERSION=`git describe`
+    if [ $? != 0 ]; then
+        VERSION='alpha'
+    fi
 else
     VERSION=$1
     IS_RELEASE=true

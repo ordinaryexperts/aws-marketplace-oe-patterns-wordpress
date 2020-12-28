@@ -23,6 +23,14 @@ unzip awscliv2.zip
 ./aws/install
 cd -
 
+# install SSM Agent
+# https://docs.aws.amazon.com/systems-manager/latest/userguide/agent-install-deb.html
+mkdir /tmp/ssm
+cd /tmp/ssm
+wget https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_amd64/amazon-ssm-agent.deb
+dpkg -i -E ./amazon-ssm-agent.deb
+systemctl enable amazon-ssm-agent
+
 # install CloudWatch agent
 cd /tmp
 curl https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb -o amazon-cloudwatch-agent.deb
@@ -58,169 +66,72 @@ cd /opt/aws/rds
 wget https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem
 cd -
 
-# custom php ppa
-add-apt-repository ppa:ondrej/php
-apt-get update
+# start WordPress specific stuff
+# based on php:7.3-buster-apache
+# https://github.com/docker-library/php/blob/26e65d3c2acc800f7b8f190540007b8bf0d66047/7.3/buster/apache/Dockerfile
+{
+    echo 'Package: php*';
+    echo 'Pin: release *';
+    echo 'Pin-Priority: -1';
+} > /etc/apt/preferences.d/no-debian-php
 
-# install apache and php
-apt-get -y install            \
-        apache2               \
-        libapache2-mod-php7.4 \
-        mysql-client-5.7      \
-        mysql-client-core-5.7 \
-        nfs-common            \
-        php-mysql             \
-        php7.4                \
-        php7.4-apcu           \
-        php7.4-cgi            \
-        php7.4-curl           \
-        php7.4-dev            \
-        php7.4-fpm            \
-        php7.4-gd             \
-        php7.4-mbstring       \
-        php7.4-xml            \
-        zlib1g-dev
+apt-get install -y --no-install-recommends \
+    autoconf \
+    dpkg-dev \
+    file \
+    g++ \
+    gcc \
+    libc-dev \
+    make \
+    pkg-config \
+    re2c \
+    ca-certificates \
+    curl \
+    xz-utils
 
-# memcache
-printf "\n" | pecl install memcache
-echo "extension=memcache.so" > /etc/php/7.4/apache2/conf.d/20-memcache.ini
-echo "extension=memcache.so" > /etc/php/7.4/cli/conf.d/20-memcache.ini
+PHP_INI_DIR=/usr/local/etc/php
+mkdir -p "$PHP_INI_DIR/conf.d"
+APACHE_CONFDIR=/etc/apache2
+APACHE_ENVVARS=$APACHE_CONFDIR/envvars
 
-# uploadprogress
-printf "\n" | pecl install uploadprogress
-echo "extension=uploadprogress.so" > /etc/php/7.4/apache2/conf.d/20-uploadprogress.ini
-echo "extension=uploadprogress.so" > /etc/php/7.4/cli/conf.d/20-uploadprogress.ini
+apt-get install -y --no-install-recommends apache2
+rm -rvf /var/www/html/*
+a2dismod mpm_event && a2enmod mpm_prefork
 
-# configure apache
-a2enmod php7.4
-a2enmod rewrite
-a2enmod ssl
+PHP_EXTRA_BUILD_DEPS=apache2-dev
+PHP_EXTRA_CONFIGURE_ARGS="--with-apxs2 --disable-cgi"
+PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+PHP_CPPFLAGS="$PHP_CFLAGS"
+PHP_LDFLAGS="-Wl,-O1 -pie"
 
-a2dissite 000-default
-mkdir -p /var/www/app/wordpress
-cat <<EOF > /etc/apache2/sites-available/wordpress.conf
-LogFormat "{\"time\":\"%{%Y-%m-%d}tT%{%T}t.%{msec_frac}tZ\", \"process\":\"%D\", \"filename\":\"%f\", \"remoteIP\":\"%a\", \"host\":\"%V\", \"request\":\"%U\", \"query\":\"%q\", \"method\":\"%m\", \"status\":\"%>s\", \"userAgent\":\"%{User-agent}i\", \"referer\":\"%{Referer}i\"}" cloudwatch
-ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"process\":\"[pid%P]\", \"message\":\"%M\"}"
+GPG_KEYS="CBAF69F173A0FEA4B537F470D66C9593118BCCB6 F38252826ACD957EF380D39F2F7956BC5DA04B5D"
 
-<VirtualHost *:80>
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/app/wordpress
+PHP_VERSION="7.4.13"
+PHP_URL="https://www.php.net/distributions/php-7.4.13.tar.xz"
+PHP_ASC_URL="https://www.php.net/distributions/php-7.4.13.tar.xz.asc"
+PHP_SHA256="0865cff41e7210de2537bcd5750377cfe09a9312b9b44c1a166cf372d5204b8f"
 
-        LogLevel warn
-        ErrorLog /var/log/apache2/error.log
-        CustomLog /var/log/apache2/access.log cloudwatch
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
+mkdir -p /usr/share/man/man1
+apt-get install -y --no-install-recommends gnupg dirmngr
 
-        RewriteEngine On
-        RewriteOptions Inherit
+mkdir -p /usr/src/php
+cd /usr/src
+curl -fsSL -o php.tar.xz "$PHP_URL"
+tar -Jxf /usr/src/php.tar.xz -C "/usr/src/php" --strip-components=1
 
-        <Directory /var/www/app/wordpress>
-            Options Indexes FollowSymLinks MultiViews
-            AllowOverride All
-            Require all granted
-        </Directory>
-
-        AddType application/x-httpd-php .php
-        AddType application/x-httpd-php phtml pht php
-
-        php_value memory_limit 128M
-        php_value post_max_size 100M
-        php_value upload_max_filesize 100M
-</VirtualHost>
-<VirtualHost *:443>
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/app/wordpress
-
-        LogLevel warn
-        ErrorLog /var/log/apache2/error-ssl.log
-        CustomLog /var/log/apache2/access-ssl.log cloudwatch
-
-        RewriteEngine On
-        RewriteOptions Inherit
-
-        <Directory /var/www/app/wordpress>
-            Options Indexes FollowSymLinks MultiViews
-            AllowOverride All
-            Require all granted
-        </Directory>
-
-        AddType application/x-httpd-php .php
-        AddType application/x-httpd-php phtml pht php
-
-        # self-signed cert
-        # real cert is managed by the ELB
-        SSLEngine on
-        SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt
-        SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key
-
-        php_value memory_limit 128M
-        php_value post_max_size 100M
-        php_value upload_max_filesize 100M
-</VirtualHost>
-EOF
-a2ensite wordpress
-
-# apache2 will be enabled / started on boot
-systemctl disable apache2
-
-# AMI hardening
-
-# Update the AMI tools before using them
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/building-shared-amis.html#public-amis-update-ami-tools
-# More details
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/set-up-ami-tools.html
-# http://www.dowdandassociates.com/blog/content/howto-install-aws-cli-amazon-elastic-compute-cloud-ec2-ami-tools/
-mkdir -p /tmp/aws
-mkdir -p /opt/aws
-curl https://s3.amazonaws.com/ec2-downloads/ec2-ami-tools.zip -o /tmp/aws/ec2-ami-tools.zip
-unzip -d /tmp/aws /tmp/aws/ec2-ami-tools.zip
-mv /tmp/aws/ec2-ami-tools-* /opt/aws/ec2-ami-tools
-rm -f /tmp/aws/ec2-ami-tools.zip
-cat <<'EOF' > /etc/profile.d/ec2-ami-tools.sh
-export EC2_AMITOOL_HOME=/opt/aws/ec2-ami-tools
-export PATH=$PATH:$EC2_AMITOOL_HOME/bin
-EOF
-cat <<'EOF' >> /etc/bash.bashrc
-
-# https://askubuntu.com/a/1139138
-if [ -d /etc/profile.d ]; then
-  for i in /etc/profile.d/*.sh; do
-    if [ -r $i ]; then
-      . $i
-    fi
-  done
-  unset i
-fi
-EOF
-
-# Disable password-based remote logins for root
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/building-shared-amis.html#public-amis-disable-password-logins-for-root
-# install ssh...
-apt-get -y install ssh
-# Default in Ubuntu already is PermitRootLogin prohibit-password...
-
-# Disable local root access
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/building-shared-amis.html#restrict-root-access
-passwd -l root
-
-# Remove SSH host key pairs
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/building-shared-amis.html#remove-ssh-host-key-pairs
-shred -u /etc/ssh/*_key /etc/ssh/*_key.pub
-
-# Install public key credentials
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/building-shared-amis.html#public-amis-install-credentials
-# Default in Ubuntu already does this...
-
-# Disabling sshd DNS checks (optional)
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/building-shared-amis.html#public-amis-disable-ssh-dns-lookups
-# Default in Ubuntu already is UseDNS no
-
-# AWS Marketplace Security Checklist
-# https://docs.aws.amazon.com/marketplace/latest/userguide/product-and-ami-policies.html#security
-sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-
-# apt cleanup
-apt-get -y autoremove
-apt-get -y update
-
-# https://aws.amazon.com/articles/how-to-share-and-use-public-amis-in-a-secure-manner/
-find / -name "authorized_keys" -exec rm -f {} \;
+apt-get install -y --no-install-recommends \
+   libargon2-dev \
+   libcurl4-openssl-dev \
+   libedit-dev \
+   libfreetype6-dev \
+   libjpeg-dev \
+   libonig-dev \
+   libpng-dev \
+   libsodium-dev \
+   libsqlite3-dev \
+   libssl-dev \
+   libxml2-dev \
+   libzip4 \
+   zlib1g-dev \
+   ${PHP_EXTRA_BUILD_DEPS:-}

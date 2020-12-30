@@ -1,8 +1,12 @@
 #!/bin/bash -eux
 
+PHP_INI_DIR=/usr/local/etc/php
+mkdir -p "$PHP_INI_DIR/conf.d"
+
 PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
 PHP_CPPFLAGS="$PHP_CFLAGS"
 PHP_LDFLAGS="-Wl,-O1 -pie"
+PHP_EXTRA_CONFIGURE_ARGS="--with-apxs2 --disable-cgi"
 
 CFLAGS="$PHP_CFLAGS"
 CPPFLAGS="$PHP_CPPFLAGS"
@@ -11,7 +15,6 @@ LDFLAGS="$PHP_LDFLAGS"
 cd /usr/src/php
 gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"
 debMultiarch="$(dpkg-architecture --query DEB_BUILD_MULTIARCH)"
-PHP_EXTRA_CONFIGURE_ARGS="--with-apxs2 --disable-cgi"
 # https://bugs.php.net/bug.php?id=74125
 if [ ! -d /usr/include/curl ]; then
 	ln -sT "/usr/include/$debMultiarch/curl" /usr/local/include/curl

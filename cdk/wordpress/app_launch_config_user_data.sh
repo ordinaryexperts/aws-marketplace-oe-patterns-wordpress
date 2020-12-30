@@ -163,9 +163,39 @@ port=`jq -r '.port' /opt/oe/patterns/wordpress/db.json`
 username=`jq -r '.username' /opt/oe/patterns/wordpress/secret.json`
 password=`jq -r '.password' /opt/oe/patterns/wordpress/secret.json`
 
-mysql -u $username -P $port -h $host --password=$password
+mysql -u $username -P $port -h $host --password=$password wordpress
 EOF
 chmod 755 /usr/local/bin/connect-to-db
+
+echo "" >> /etc/apache2/envvars
+
+echo "export DB_NAME=wordpress" >> /etc/apache2/envvars
+echo "export DB_USER=`jq -r '.username' /opt/oe/patterns/wordpress/secret.json`" >> /etc/apache2/envvars
+echo "export DB_PASSWORD=`jq -r '.password' /opt/oe/patterns/wordpress/secret.json`" >> /etc/apache2/envvars
+echo "export DB_HOST=${DbCluster.Endpoint.Address}" >> /etc/apache2/envvars
+
+echo "" >> /etc/apache2/envvars
+
+echo "export WP_ENV=production" >> /etc/apache2/envvars
+echo "export WP_HOME=${WordPressHome}" >> /etc/apache2/envvars
+echo "export WP_SITEURL=${WordPressHome}/wp" >> /etc/apache2/envvars
+
+echo "" >> /etc/apache2/envvars
+
+PREFIX="${Prefix}"
+function write_apache_env() {
+    KEY="${!PREFIX}_$1"
+    VALUE=`aws secretsmanager get-secret-value --secret-id $KEY | jq '.SecretString | fromjson | .value' | sed "s/\"/'/g"`
+    echo "export $1=$VALUE" >> /etc/apache2/envvars
+}
+write_apache_env "AUTH_KEY"
+write_apache_env "AUTH_SALT"
+write_apache_env "LOGGED_IN_KEY"
+write_apache_env "LOGGED_IN_SALT"
+write_apache_env "NONCE_KEY"
+write_apache_env "NONCE_SALT"
+write_apache_env "SECURE_AUTH_KEY"
+write_apache_env "SECURE_AUTH_SALT"
 
 # elasticache values
 if [[ "${ElastiCacheEnable}" == "true" ]]
@@ -179,9 +209,6 @@ if [[ "${CloudFrontEnable}" == "true" ]]
 then
     jq -n --arg host "${CloudFrontHost}" '{host: $host}' > /opt/oe/patterns/wordpress/cloudfront.json
 fi
-
-# salt
-echo "${WordPressSalt}" > /opt/oe/patterns/wordpress/salt.txt
 
 # apache
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \

@@ -77,20 +77,19 @@ cd -
 
 apt-get install -y --no-install-recommends \
     autoconf \
+    ca-certificates \
+    curl \
     dpkg-dev \
     file \
     g++ \
     gcc \
     libc-dev \
     make \
+    mariadb-client \
     pkg-config \
     re2c \
-    ca-certificates \
-    curl \
     xz-utils
 
-PHP_INI_DIR=/usr/local/etc/php
-mkdir -p "$PHP_INI_DIR/conf.d"
 APACHE_CONFDIR=/etc/apache2
 APACHE_ENVVARS=$APACHE_CONFDIR/envvars
 
@@ -99,10 +98,6 @@ rm -rvf /var/www/html/*
 a2dismod mpm_event && a2enmod mpm_prefork
 
 PHP_EXTRA_BUILD_DEPS=apache2-dev
-PHP_EXTRA_CONFIGURE_ARGS="--with-apxs2 --disable-cgi"
-PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
-PHP_CPPFLAGS="$PHP_CFLAGS"
-PHP_LDFLAGS="-Wl,-O1 -pie"
 
 GPG_KEYS="CBAF69F173A0FEA4B537F470D66C9593118BCCB6 F38252826ACD957EF380D39F2F7956BC5DA04B5D"
 

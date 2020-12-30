@@ -19,6 +19,7 @@ from aws_cdk import (
     aws_lambda,
     aws_logs,
     aws_rds,
+    aws_route53,
     aws_s3,
     aws_secretsmanager,
     aws_sns,
@@ -233,11 +234,6 @@ class WordPressStack(core.Stack):
             default="true",
             description="Optional: Trigger the first deployment with a copy of an initial default codebase from Ordinary Experts using WordPress 5 and some common plugins taking advantage of the stack capabilities."
         )
-        initialize_default_wordpress_condition = core.CfnCondition(
-            self,
-            "InitializeDefaultWordPressCondition",
-            expression=core.Fn.condition_equals(initialize_default_wordpress_param.value, "true")
-        )
         notification_email_param = core.CfnParameter(
             self,
             "NotificationEmail",
@@ -249,6 +245,12 @@ class WordPressStack(core.Stack):
             "PipelineArtifactBucketName",
             default="",
             description="Optional: Specify a bucket name for the CodePipeline pipeline to use. The bucket must be in this same AWS account. This can be handy when re-creating this template many times."
+        )
+        route_53_hosted_zone_name_param = core.CfnParameter(
+            self,
+            "Route53HostedZoneName",
+            default="",
+            description="Optional: Route 53 Hosted Zone name in which a DNS record will be created by this template. If supplied, must already exist and be the domain part of the WordPress Hostname parameter, without trailing dot. E.G. 'internal.mycompany.com'"
         )
         secret_arn_param = core.CfnParameter(
             self,
@@ -268,10 +270,10 @@ class WordPressStack(core.Stack):
             default="wordpress.zip",
             description="Required: AWS S3 Object key (path) for the build artifact for the application.  Updates to this object will trigger a deployment."
         )
-        word_press_home_param = core.CfnParameter(
+        word_press_hostname_param = core.CfnParameter(
             self,
-            "WordPressHome",
-            description="Required: The URL for the WordPress site."
+            "WordPressHostname",
+            description="Required: The hostname for the WordPress site, i.e. my-wordpress-site.mycompany.com - leave off the http:// or https://"
         )
 
         #
@@ -315,6 +317,11 @@ class WordPressStack(core.Stack):
             "ElastiCacheEnableCondition",
             expression=core.Fn.condition_equals(elasticache_enable_param.value, "true")
         )
+        initialize_default_wordpress_condition = core.CfnCondition(
+            self,
+            "InitializeDefaultWordPressCondition",
+            expression=core.Fn.condition_equals(initialize_default_wordpress_param.value, "true")
+        )
         notification_email_exists_condition = core.CfnCondition(
             self,
             "NotificationEmailExists",
@@ -349,6 +356,11 @@ class WordPressStack(core.Stack):
             self,
             "SourceArtifactBucketNameNotExists",
             expression=core.Fn.condition_equals(source_artifact_bucket_name_param.value, "")
+        )
+        route_53_hosted_zone_name_exists_condition = core.CfnCondition(
+            self,
+            "Route53HostedZoneNameExists",
+            expression=core.Fn.condition_not(core.Fn.condition_equals(route_53_hosted_zone_name_param.value, ""))
         )
 
         #
@@ -1191,7 +1203,13 @@ class WordPressStack(core.Stack):
                                     ""
                                 )
                             ),
-                            "WordPressHome": word_press_home_param.value_as_string,
+                            "WordPressHome": core.Token.as_string(
+                                core.Fn.condition_if(
+                                    certificate_arn_exists_condition.logical_id,
+                                    core.Fn.join("", ["https://", word_press_hostname_param.value_as_string]),
+                                    core.Fn.join("", ["http://", word_press_hostname_param.value_as_string])
+                                )
+                            ),
                             "ElastiCacheClusterHost": core.Token.as_string(
                                 core.Fn.condition_if(
                                     elasticache_enable_condition.logical_id,
@@ -1927,6 +1945,19 @@ class WordPressStack(core.Stack):
             "SourceArtifactBucketNameOutput",
             value=source_artifact_bucket_name
         )
+
+        # route 53
+        record_set = aws_route53.CfnRecordSet(
+            self,
+            "RecordSet",
+            hosted_zone_name=f"{route_53_hosted_zone_name_param.value_as_string}.",
+            name=word_press_hostname_param.value_as_string,
+            resource_records=[ alb.attr_dns_name ],
+            type="CNAME"
+        )
+        # https://github.com/aws/aws-cdk/issues/8431
+        record_set.add_property_override("TTL", 60)
+        record_set.cfn_options.condition = route_53_hosted_zone_name_exists_condition
 
         # AWS::CloudFormation::Interface
         self.template_options.metadata = {

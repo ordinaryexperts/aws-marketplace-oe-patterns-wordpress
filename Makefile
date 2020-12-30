@@ -68,6 +68,7 @@ deploy: build
 	--parameters ElastiCacheEnable=false \
 	--parameters InitializeDefaultWordPress=true \
 	--parameters PipelineArtifactBucketName=github-user-and-bucket-taskcatbucket-2zppaw3wi3sx \
+	--parameters Route53HostedZoneName=dev.patterns.ordinaryexperts.com \
 	--parameters SourceArtifactBucketName=github-user-and-bucket-githubartifactbucket-wl52dae3lyub \
 	--parameters SourceArtifactObjectKey=develop-wordpress.zip \
 	--parameters VpcId=vpc-00425deda4c835455 \
@@ -75,7 +76,7 @@ deploy: build
 	--parameters VpcPrivateSubnetId2=subnet-079290412ce63c4d5 \
 	--parameters VpcPublicSubnetId1=subnet-0c2f5d4daa1792c8d \
 	--parameters VpcPublicSubnetId2=subnet-060c39a6ded9e89d7 \
-	--parameters WordPressHome=https://wordpress-${USER}.dev.patterns.ordinaryexperts.com
+	--parameters WordPressHostname=wordpress-${USER}.dev.patterns.ordinaryexperts.com
 
 destroy: build
 	docker-compose run -w /code/cdk --rm wordpress cdk destroy

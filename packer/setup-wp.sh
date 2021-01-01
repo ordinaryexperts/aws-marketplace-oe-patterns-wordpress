@@ -2,13 +2,44 @@
 
 PHP_INI_DIR=/usr/local/etc/php
 
+# imagick
+printf "\n" | pecl install imagick-3.4.4
+echo "extension=imagick.so" > $PHP_INI_DIR/conf.d/imagick.ini
+
 # memcache
 printf "\n" | pecl install memcache-4.0.5.2
 echo "extension=memcache.so" > $PHP_INI_DIR/conf.d/memcache.ini
 
 # uploadprogress
-printf "\n" | pecl install uploadprogress
+printf "\n" | pecl install uploadprogress-1.1.3
 echo "extension=uploadprogress.so" > $PHP_INI_DIR/conf.d/uploadprogress.ini
+
+# mcrypt
+printf "\n" | pecl install mcrypt-1.0.4
+echo "extension=mcrypt.so" > $PHP_INI_DIR/conf.d/mcrypt.ini
+
+echo "zend_extension=opcache" > $PHP_INI_DIR/conf.d/opcache.ini
+echo "extension=sodium" > $PHP_INI_DIR/conf.d/sodium.ini
+
+cat <<EOF > $PHP_INI_DIR/conf.d/opcache-recommended.ini
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=8
+opcache.max_accelerated_files=4000
+opcache.revalidate_freq=2
+opcache.fast_shutdown=1
+EOF
+
+cat <<EOF > $PHP_INI_DIR/conf.d/error-logging.ini
+error_reporting = E_ERROR | E_WARNING | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_RECOVERABLE_ERROR
+display_errors = Off
+display_startup_errors = Off
+log_errors = On
+error_log = /var/log/apache2/php-error.log
+log_errors_max_len = 1024
+ignore_repeated_errors = On
+ignore_repeated_source = Off
+html_errors = Off
+EOF
 
 # configure apache
 a2enmod rewrite

@@ -116,17 +116,21 @@ curl -fsSL -o php.tar.xz "$PHP_URL"
 tar -Jxf /usr/src/php.tar.xz -C "/usr/src/php" --strip-components=1
 
 apt-get install -y --no-install-recommends \
+   ghostscript \
    libargon2-dev \
    libcurl4-openssl-dev \
    libedit-dev \
    libfreetype6-dev \
    libjpeg-dev \
+   libmagickwand-dev \
+   libmcrypt-dev \
    libonig-dev \
    libpng-dev \
    libsodium-dev \
    libsqlite3-dev \
    libssl-dev \
    libxml2-dev \
+   libzip-dev \
    libzip4 \
    zlib1g-dev \
    ${PHP_EXTRA_BUILD_DEPS:-}

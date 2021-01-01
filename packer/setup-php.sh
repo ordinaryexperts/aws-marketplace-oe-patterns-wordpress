@@ -19,6 +19,7 @@ debMultiarch="$(dpkg-architecture --query DEB_BUILD_MULTIARCH)"
 if [ ! -d /usr/include/curl ]; then
 	ln -sT "/usr/include/$debMultiarch/curl" /usr/local/include/curl
 fi
+# https://make.wordpress.org/hosting/handbook/handbook/server-environment/#php-extensions
 ./configure \
 	--build="$gnuArch" \
 	--enable-ftp \
@@ -38,6 +39,7 @@ fi
 	--with-pic \
 	--with-sodium=shared \
 	--with-sqlite3=/usr \
+	--with-zip \
 	--with-zlib \
     --enable-bcmath \
     --enable-exif \

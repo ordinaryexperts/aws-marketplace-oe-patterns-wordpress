@@ -94,7 +94,8 @@ APACHE_CONFDIR=/etc/apache2
 APACHE_ENVVARS=$APACHE_CONFDIR/envvars
 
 apt-get install -y --no-install-recommends apache2
-rm -rvf /var/www/html/*
+a2dissite 000-default
+rm -rvf /var/www/html
 a2dismod mpm_event && a2enmod mpm_prefork
 
 PHP_EXTRA_BUILD_DEPS=apache2-dev

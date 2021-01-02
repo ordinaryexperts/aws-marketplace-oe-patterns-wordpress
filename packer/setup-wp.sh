@@ -45,7 +45,11 @@ EOF
 a2enmod rewrite
 a2enmod ssl
 
-a2dissite 000-default
+# wp-cli
+curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /tmp/wp-cli.phar
+chmod 755 /tmp/wp-cli.phar
+mv /tmp/wp-cli.phar /usr/local/bin/wp
+
 cat <<EOF > /etc/apache2/sites-available/wordpress.conf
 LogFormat "{\"time\":\"%{%Y-%m-%d}tT%{%T}t.%{msec_frac}tZ\", \"process\":\"%D\", \"filename\":\"%f\", \"remoteIP\":\"%a\", \"host\":\"%V\", \"request\":\"%U\", \"query\":\"%q\", \"method\":\"%m\", \"status\":\"%>s\", \"userAgent\":\"%{User-agent}i\", \"referer\":\"%{Referer}i\"}" cloudwatch
 ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"process\":\"[pid%P]\", \"message\":\"%M\"}"
@@ -62,9 +66,17 @@ ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"proce
         RewriteOptions Inherit
 
         <Directory /var/www/app/bedrock/web>
-            Options Indexes FollowSymLinks MultiViews
+            Options -Indexes
             AllowOverride All
             Require all granted
+            <IfModule mod_rewrite.c>
+                RewriteEngine On
+                RewriteBase /
+                RewriteRule ^index.php$ - [L]
+                RewriteCond %{REQUEST_FILENAME} !-f
+                RewriteCond %{REQUEST_FILENAME} !-d
+                RewriteRule . /index.php [L]
+            </IfModule>
         </Directory>
 
         AddType application/x-httpd-php .php
@@ -86,9 +98,17 @@ ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"proce
         RewriteOptions Inherit
 
         <Directory /var/www/app/bedrock/web>
-            Options Indexes FollowSymLinks MultiViews
+            Options -Indexes
             AllowOverride All
             Require all granted
+            <IfModule mod_rewrite.c>
+                RewriteEngine On
+                RewriteBase /
+                RewriteRule ^index.php$ - [L]
+                RewriteCond %{REQUEST_FILENAME} !-f
+                RewriteCond %{REQUEST_FILENAME} !-d
+                RewriteRule . /index.php [L]
+            </IfModule>
         </Directory>
 
         AddType application/x-httpd-php .php

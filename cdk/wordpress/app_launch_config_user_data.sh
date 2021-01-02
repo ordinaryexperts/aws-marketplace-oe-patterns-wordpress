@@ -132,8 +132,8 @@ systemctl start amazon-cloudwatch-agent
 mkdir /mnt/efs
 mount -t efs "${AppEfs}":/ /mnt/efs
 echo "${AppEfs}:/ /mnt/efs efs _netdev 0 0" >> /etc/fstab
-mkdir -p /mnt/efs/wordpress/files
-chown www-data /mnt/efs/wordpress/files
+mkdir -p /mnt/efs/wordpress/uploads
+chown www-data /mnt/efs/wordpress/uploads
 
 mkdir -p /opt/oe/patterns/wordpress
 

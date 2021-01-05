@@ -19,16 +19,6 @@
       "type": "shell",
       "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
       "script": "./packer/setup.sh"
-    },
-    {
-      "type": "shell",
-      "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "script": "./packer/setup-php.sh"
-    },
-    {
-      "type": "shell",
-      "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "script": "./packer/setup-wp.sh"
     }
   ],
   "post-processors": [

@@ -5,7 +5,6 @@ import yaml
 from aws_cdk import (
     aws_autoscaling,
     aws_cloudformation,
-    aws_cloudfront,
     aws_cloudwatch,
     aws_codebuild,
     aws_codedeploy,
@@ -13,7 +12,6 @@ from aws_cdk import (
     aws_codepipeline_actions,
     aws_ec2,
     aws_efs,
-    aws_elasticache,
     aws_elasticloadbalancingv2,
     aws_iam,
     aws_lambda,
@@ -144,38 +142,6 @@ class WordPressStack(core.Stack):
             default="",
             description="Optional: Specify the ARN of a ACM Certificate to configure HTTPS."
         )
-        cloudfront_aliases_param = core.CfnParameter(
-            self,
-            "CloudFrontAliases",
-            default="",
-            description="Optional: A list of hostname aliases registered with the CloudFront distribution. If a certificate is supplied, each hostname must validate against the certificate.",
-            type="CommaDelimitedList"
-        )
-        cloudfront_certificate_arn_param = core.CfnParameter(
-            self,
-            "CloudFrontCertificateArn",
-            default="",
-            description="Optional: The ARN from AWS Certificate Manager for the SSL cert used in CloudFront CDN. Must be in us-east-1 region."
-        )
-        cloudfront_enable_param = core.CfnParameter(
-            self,
-            "CloudFrontEnable",
-            allowed_values=[ "true", "false" ],
-            default="false",
-            description="Required: Enable CloudFront CDN support."
-        )
-        cloudfront_price_class_param = core.CfnParameter(
-            self,
-            "CloudFrontPriceClass",
-            # possible to use a map to make the values more human readable
-            allowed_values = [
-                "PriceClass_All",
-                "PriceClass_200",
-                "PriceClass_100"
-            ],
-            default="PriceClass_All",
-            description="Required: Price class to use for CloudFront CDN (only applies when CloudFront enabled)."
-        )
         db_instance_class_param = core.CfnParameter(
             self,
             "DbInstanceClass",
@@ -188,36 +154,6 @@ class WordPressStack(core.Stack):
             "DbSnapshotIdentifier",
             default="",
             description="Optional: RDS snapshot ARN from which to restore. If specified, manually edit the secret values to specify the snapshot credentials for the application. WARNING: Changing this value will re-provision the database."
-        )
-        elasticache_cluster_cache_node_type_param = core.CfnParameter(
-            self,
-            "ElastiCacheClusterCacheNodeType",
-            allowed_values=allowed_values["allowed_cache_instance_types"],
-            default="cache.t3.micro",
-            description="Required: Instance type for the memcached cluster nodes (only applies when ElastiCache enabled)."
-        )
-        elasticache_cluster_engine_version_param = core.CfnParameter(
-            self,
-            "ElastiCacheClusterEngineVersion",
-            allowed_values=[ "1.4.14", "1.4.24", "1.4.33", "1.4.34", "1.4.5", "1.5.10", "1.5.16" ],
-            default="1.5.16",
-            description="Required: The memcached version of the cache cluster (only applies when ElastiCache enabled)."
-        )
-        elasticache_cluster_num_cache_nodes_param = core.CfnParameter(
-            self,
-            "ElastiCacheClusterNumCacheNodes",
-            default=2,
-            description="Required: The number of cache nodes in the memcached cluster (only applies ElastiCache enabled).",
-            min_value=1,
-            max_value=20,
-            type="Number"
-        )
-        elasticache_enable_param = core.CfnParameter(
-            self,
-            "ElastiCacheEnable",
-            allowed_values=[ "true", "false" ],
-            default="false",
-            description="Required: Whether to provision ElastiCache memcached cluster."
         )
         initialize_default_wordpress_param = core.CfnParameter(
             self,
@@ -282,32 +218,10 @@ class WordPressStack(core.Stack):
             "CertificateArnNotExists",
             expression=core.Fn.condition_equals(certificate_arn_param.value, "")
         )
-        cloudfront_aliases_exist_condition = core.CfnCondition(
-            self,
-            "CloudFrontAliasesExist",
-            expression=core.Fn.condition_not(
-                core.Fn.condition_equals(core.Fn.select(0, cloudfront_aliases_param.value_as_list), "")
-            )
-        )
-        cloudfront_certificate_arn_exists_condition = core.CfnCondition(
-            self,
-            "CloudFrontCertificateArnExists",
-            expression=core.Fn.condition_not(core.Fn.condition_equals(cloudfront_certificate_arn_param.value, ""))
-        )
-        cloudfront_enable_condition = core.CfnCondition(
-            self,
-            "CloudFrontEnableCondition",
-            expression=core.Fn.condition_equals(cloudfront_enable_param.value, "true")
-        )
         db_snapshot_identifier_exists_condition = core.CfnCondition(
             self,
             "DbSnapshotIdentifierExistsCondition",
             expression=core.Fn.condition_not(core.Fn.condition_equals(db_snapshot_identifier_param.value, ""))
-        )
-        elasticache_enable_condition = core.CfnCondition(
-            self,
-            "ElastiCacheEnableCondition",
-            expression=core.Fn.condition_equals(elasticache_enable_param.value, "true")
         )
         initialize_default_wordpress_condition = core.CfnCondition(
             self,
@@ -359,21 +273,6 @@ class WordPressStack(core.Stack):
         # RULES
         #
 
-        cloudfront_aliases_certificate_rule = core.CfnRule(
-            self,
-            "CloudFrontAliasesAndCertificateRequiredRule",
-            assertions=[
-                core.CfnRuleAssertion(
-                    assert_=core.Fn.condition_not(
-                        core.Fn.condition_equals(cloudfront_certificate_arn_param.value_as_string, "")
-                    ),
-                    assert_description="When providing a set of aliases for CloudFront, you must also supply a trusted CloudFrontCertificateArn parameter which validates your authorization to use those domain names"
-                )
-            ],
-            rule_condition=core.Fn.condition_not(
-                core.Fn.condition_each_member_equals(cloudfront_aliases_param.value_as_list, "")
-            )
-        )
         db_snapshot_secret_rule = core.CfnRule(
             self,
             "DbSnapshotIdentifierAndSecretRequiredRule",
@@ -839,224 +738,6 @@ class WordPressStack(core.Stack):
             subnet_id=vpc.private_subnet2_id()
         )
 
-        # elasticache
-        elasticache_sg = aws_ec2.CfnSecurityGroup(
-            self,
-            "ElastiCacheSg",
-            group_description="App SG",
-            vpc_id=vpc.id()
-        )
-        elasticache_sg.cfn_options.condition = elasticache_enable_condition
-        elasticache_sg_ingress = aws_ec2.CfnSecurityGroupIngress(
-            self,
-            "ElasticacheSgIngress",
-            from_port=11211,
-            group_id=elasticache_sg.ref,
-            ip_protocol="tcp",
-            source_security_group_id=app_sg.ref,
-            to_port=11211
-        )
-        elasticache_sg_ingress.cfn_options.condition = elasticache_enable_condition
-        elasticache_subnet_group = core.CfnResource(
-            self,
-            "ElastiCacheSubnetGroup",
-            type="AWS::ElastiCache::SubnetGroup",
-            properties={
-                "Description": "ElastiCache subnet group.",
-                "SubnetIds":  vpc.private_subnet_ids()
-            }
-        )
-        elasticache_subnet_group.cfn_options.condition = elasticache_enable_condition
-        elasticache_cluster = aws_elasticache.CfnCacheCluster(
-            self,
-            "ElastiCacheCluster",
-            az_mode="cross-az",
-            cache_node_type=elasticache_cluster_cache_node_type_param.value_as_string,
-            cache_subnet_group_name=elasticache_subnet_group.ref,
-            engine="memcached",
-            engine_version=elasticache_cluster_engine_version_param.value_as_string,
-            num_cache_nodes=elasticache_cluster_num_cache_nodes_param.value_as_number,
-            vpc_security_group_ids=[ elasticache_sg.ref ]
-        )
-        core.Tag.add(elasticache_cluster, "oe:patterns:wordpress:stack", core.Aws.STACK_NAME)
-        elasticache_cluster.cfn_options.condition = elasticache_enable_condition
-
-        # cloudfront
-        cloudfront_distribution = aws_cloudfront.CfnDistribution(
-            self,
-            "CloudFrontDistribution",
-            distribution_config=aws_cloudfront.CfnDistribution.DistributionConfigProperty(
-                aliases=core.Token.as_list(
-                    core.Fn.condition_if(
-                        cloudfront_aliases_exist_condition.logical_id,
-                        cloudfront_aliases_param.value_as_list,
-                        core.Aws.NO_VALUE
-                    )
-                ),
-                comment=core.Aws.STACK_NAME,
-                default_cache_behavior=aws_cloudfront.CfnDistribution.DefaultCacheBehaviorProperty(
-                    allowed_methods=[
-                        "DELETE",
-                        "GET",
-                        "HEAD",
-                        "OPTIONS",
-                        "PATCH",
-                        "POST",
-                        "PUT"
-                    ],
-                    compress=True,
-                    default_ttl=86400,
-                    forwarded_values=aws_cloudfront.CfnDistribution.ForwardedValuesProperty(
-                        cookies=aws_cloudfront.CfnDistribution.CookiesProperty(
-                            forward="whitelist",
-                            whitelisted_names=[ "SESS*" ]
-                        ),
-                        headers=[
-                            "CloudFront-Forwarded-Proto",
-                            "Host",
-                            "Origin"
-                        ],
-                        query_string=True
-                    ),
-                    min_ttl=0,
-                    max_ttl=31536000,
-                    target_origin_id="alb",
-                    # when alb certificate is supplied, we automatically redirect http traffic to https.
-                    # using that as a best-practice pattern, we redirect all traffic at cloudfront as well,
-                    # covered either by the default AWS cloudfront cert when no aliases are supplied, or by the
-                    # cert of the CloudFrontCertificateArn parameter.
-                    viewer_protocol_policy="redirect-to-https"
-                ),
-                enabled=True,
-                origins=[ aws_cloudfront.CfnDistribution.OriginProperty(
-                    domain_name=alb.attr_dns_name,
-                    id="alb",
-                    custom_origin_config=aws_cloudfront.CfnDistribution.CustomOriginConfigProperty(
-                        # if there is an ssl cert on the alb, use https only
-                        origin_protocol_policy=core.Token.as_string(
-                            core.Fn.condition_if(
-                                certificate_arn_exists_condition.logical_id,
-                                "https-only",
-                                "http-only"
-                            )
-                        ),
-                        origin_ssl_protocols=[ "TLSv1.1", "TLSv1.2" ]
-                    )
-                )],
-                price_class=cloudfront_price_class_param.value_as_string,
-                viewer_certificate=aws_cloudfront.CfnDistribution.ViewerCertificateProperty(
-                    acm_certificate_arn=core.Token.as_string(
-                        core.Fn.condition_if(
-                            cloudfront_certificate_arn_exists_condition.logical_id,
-                            cloudfront_certificate_arn_param.value_as_string,
-                            core.Aws.NO_VALUE
-                        )
-                    ),
-                    cloud_front_default_certificate=core.Fn.condition_if(
-                        cloudfront_certificate_arn_exists_condition.logical_id,
-                        core.Aws.NO_VALUE,
-                        True
-                    ),
-                    minimum_protocol_version=core.Token.as_string(
-                        core.Fn.condition_if(
-                            cloudfront_certificate_arn_exists_condition.logical_id,
-                            "TLSv1.2_2018",
-                            core.Aws.NO_VALUE
-                        )
-                    ),
-                    ssl_support_method=core.Token.as_string(
-                        core.Fn.condition_if(
-                            cloudfront_certificate_arn_exists_condition.logical_id,
-                            "sni-only",
-                            core.Aws.NO_VALUE
-                        )
-                    )
-                )
-            )
-        )
-        cloudfront_distribution_arn = core.Arn.format(
-            components=core.ArnComponents(
-                account=core.Aws.ACCOUNT_ID,
-                region="",
-                resource="distribution",
-                resource_name=cloudfront_distribution.ref,
-                service="cloudfront"
-            ),
-            stack=self
-        )
-        cloudfront_distribution.cfn_options.condition = cloudfront_enable_condition
-        cloudfront_invalidation_lambda_function_role = aws_iam.CfnRole(
-            self,
-            "CloudFrontInvalidationLambdaFunctionRole",
-            assume_role_policy_document=aws_iam.PolicyDocument(
-                statements=[
-                    aws_iam.PolicyStatement(
-                        effect=aws_iam.Effect.ALLOW,
-                        actions=[ "sts:AssumeRole" ],
-                        principals=[ aws_iam.ServicePrincipal("lambda.amazonaws.com") ]
-                    )
-                ]
-            ),
-            managed_policy_arns=[
-                "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-            ],
-            policies=[
-                aws_iam.CfnRole.PolicyProperty(
-                    policy_document=aws_iam.PolicyDocument(
-                        statements=[
-                            aws_iam.PolicyStatement(
-                                effect=aws_iam.Effect.ALLOW,
-                                actions=[ "cloudfront:CreateInvalidation" ],
-                                resources=[ cloudfront_distribution_arn ]
-                            )
-                        ]
-                    ),
-                    policy_name="CloudFrontInvalidation"
-                ),
-                aws_iam.CfnRole.PolicyProperty(
-                    policy_document=aws_iam.PolicyDocument(
-                        statements=[
-                            aws_iam.PolicyStatement(
-                                effect=aws_iam.Effect.ALLOW,
-                                actions=[
-                                    "codepipeline:PutJobSuccessResult",
-                                    "codepipeline:PutJobFailureResult"
-                                ],
-                                resources=[ "*" ]
-                            )
-                        ]
-                    ),
-                    policy_name="CodePipelineResult"
-                ),
-                aws_iam.CfnRole.PolicyProperty(
-                    policy_document=iam_notification_publish_policy,
-                    policy_name="SnsPublishToNotificationTopic"
-                )
-            ]
-        )
-        cloudfront_invalidation_lambda_function_role.cfn_options.condition = cloudfront_enable_condition
-        with open("wordpress/cloudfront_invalidation_lambda_function_code.py") as f:
-            cloudfront_invalidation_lambda_function_code = f.read()
-        cloudfront_invalidation_lambda_function = aws_lambda.CfnFunction(
-            self,
-            "CloudFrontInvalidationLambdaFunction",
-            code=aws_lambda.CfnFunction.CodeProperty(
-                zip_file=cloudfront_invalidation_lambda_function_code
-            ),
-            dead_letter_config=aws_lambda.CfnFunction.DeadLetterConfigProperty(
-                target_arn=notification_topic.ref
-            ),
-            environment=aws_lambda.CfnFunction.EnvironmentProperty(
-                variables={
-                    "CloudFrontDistributionId": cloudfront_distribution.ref,
-                }
-            ),
-            handler="index.lambda_handler",
-            role=cloudfront_invalidation_lambda_function_role.attr_arn,
-            runtime="python3.7"
-        )
-        cloudfront_invalidation_lambda_function.cfn_options.condition = cloudfront_enable_condition
-
         # app
         app_instance_role = aws_iam.CfnRole(
             self,
@@ -1196,36 +877,11 @@ class WordPressStack(core.Stack):
                     core.Fn.sub(
                         app_launch_config_user_data,
                         {
-                            "CloudFrontHost": core.Token.as_string(
-                                core.Fn.condition_if(
-                                    cloudfront_enable_condition.logical_id,
-                                    core.Fn.condition_if(
-                                        cloudfront_aliases_exist_condition.logical_id,
-                                        core.Fn.select(0, cloudfront_aliases_param.value_as_list),
-                                        cloudfront_distribution.attr_domain_name
-                                    ),
-                                    ""
-                                )
-                            ),
                             "WordPressHome": core.Token.as_string(
                                 core.Fn.condition_if(
                                     certificate_arn_exists_condition.logical_id,
                                     core.Fn.join("", ["https://", word_press_hostname_param.value_as_string]),
                                     core.Fn.join("", ["http://", word_press_hostname_param.value_as_string])
-                                )
-                            ),
-                            "ElastiCacheClusterHost": core.Token.as_string(
-                                core.Fn.condition_if(
-                                    elasticache_enable_condition.logical_id,
-                                    elasticache_cluster.attr_configuration_endpoint_address,
-                                    ""
-                                )
-                            ),
-                            "ElastiCacheClusterPort": core.Token.as_string(
-                                core.Fn.condition_if(
-                                    elasticache_enable_condition.logical_id,
-                                    elasticache_cluster.attr_configuration_endpoint_port,
-                                    ""
                                 )
                             ),
                             "SecretArn": core.Token.as_string(
@@ -1593,56 +1249,6 @@ class WordPressStack(core.Stack):
             ),
             stack=self
         )
-        codepipeline_finalize_stage_role = aws_iam.CfnRole(
-           self,
-           "CodePipelineFinalizeStageRole",
-            assume_role_policy_document=aws_iam.PolicyDocument(
-                statements=[
-                    aws_iam.PolicyStatement(
-                        effect=aws_iam.Effect.ALLOW,
-                        actions=[ "sts:AssumeRole" ],
-                        principals=[ aws_iam.ArnPrincipal(codepipeline_role_arn) ]
-                    )
-                ]
-            ),
-            policies=[
-                aws_iam.CfnRole.PolicyProperty(
-                    policy_document=aws_iam.PolicyDocument(
-                        statements=[
-                            aws_iam.PolicyStatement(
-                                effect=aws_iam.Effect.ALLOW,
-                                actions=[ "codedeploy:*" ],
-                                resources=[ "*" ]
-                            )
-                        ]
-                    ),
-                    policy_name="CodeDeploy"
-                ),
-                aws_iam.CfnRole.PolicyProperty(
-                    policy_document=aws_iam.PolicyDocument(
-                        statements=[
-                            aws_iam.PolicyStatement(
-                                effect=aws_iam.Effect.ALLOW,
-                                actions=[ "lambda:InvokeFunction" ],
-                                resources=[ cloudfront_invalidation_lambda_function.attr_arn ]
-                            )
-                        ]
-                    ),
-                    policy_name="InvokeCloudFrontInvalidationLambdaFunction",
-                )
-            ]
-        )
-        codepipeline_finalize_stage_role.cfn_options.condition = cloudfront_enable_condition
-        codepipeline_finalize_stage_role_arn = core.Arn.format(
-            components=core.ArnComponents(
-                account=core.Aws.ACCOUNT_ID,
-                region="",
-                resource="role",
-                resource_name=codepipeline_finalize_stage_role.ref,
-                service="iam"
-            ),
-            stack=self
-        )
 
         codedeploy_application = aws_codedeploy.CfnApplication(
             self,
@@ -1802,44 +1408,6 @@ class WordPressStack(core.Stack):
                 )
             ]
         )
-        # https://github.com/aws/aws-cdk/issues/8396
-        codepipeline.add_override(
-            "Properties.Stages.3",
-            {
-                "Fn::If": [
-                    cloudfront_enable_condition.logical_id,
-                    {
-                        "Actions": [
-                            {
-                                "ActionTypeId": {
-                                    "Category": "Invoke",
-                                    "Owner": "AWS",
-                                    "Provider": "Lambda",
-                                    "Version": "1"
-                                },
-                                "Configuration": {
-                                    "FunctionName": cloudfront_invalidation_lambda_function.ref
-                                },
-                                "Name": "CloudFrontInvalidationAction",
-                                "RoleArn": codepipeline_finalize_stage_role_arn
-                            }
-                        ],
-                        "Name": "Finalize"
-                    },
-                    core.Aws.NO_VALUE
-                ]
-            }
-        )
-        cloudfront_invalidation_lambda_permission = aws_lambda.CfnPermission(
-            self,
-            "CloudFrontInvalidationLambdaPermission",
-            action="lambda:InvokeFunction",
-            function_name=cloudfront_invalidation_lambda_function.attr_arn,
-            principal="events.amazonaws.com",
-            source_arn=codepipeline_role_arn
-        )
-        cloudfront_invalidation_lambda_permission.cfn_options.condition = cloudfront_enable_condition
-
 
         # default wordpress
         initialize_default_wordpress_lambda_function_role = aws_iam.CfnRole(
@@ -1929,21 +1497,6 @@ class WordPressStack(core.Stack):
             description="The DNS name of the application load balancer.",
             value=alb.attr_dns_name
         )
-        cloudfront_distribution_endpoint_output = core.CfnOutput(
-            self,
-            "CloudFrontDistributionEndpointOutput",
-            condition=cloudfront_enable_condition,
-            description="The distribution DNS name endpoint for connection. Configure in WordPress settings.",
-            value=cloudfront_distribution.attr_domain_name
-        )
-        elasticache_cluster_endpoint_output = core.CfnOutput(
-            self,
-            "ElastiCacheClusterEndpointOutput",
-            condition=elasticache_enable_condition,
-            description="The endpoint of the cluster for connection. Configure in WordPress settings.",
-            value="{}:{}".format(elasticache_cluster.attr_configuration_endpoint_address,
-                                 elasticache_cluster.attr_configuration_endpoint_port)
-        )
         source_artifact_bucket_name_output = core.CfnOutput(
             self,
             "SourceArtifactBucketNameOutput",
@@ -2001,28 +1554,6 @@ class WordPressStack(core.Stack):
                             initialize_default_wordpress_param.logical_id
                         ]
                     },
-                    {
-                        "Label": {
-                            "default": "ElastiCache memcached"
-                        },
-                        "Parameters": [
-                            elasticache_enable_param.logical_id,
-                            elasticache_cluster_engine_version_param.logical_id,
-                            elasticache_cluster_cache_node_type_param.logical_id,
-                            elasticache_cluster_num_cache_nodes_param.logical_id
-                        ]
-                    },
-                    {
-                        "Label": {
-                            "default": "CloudFront"
-                        },
-                        "Parameters": [
-                            cloudfront_enable_param.logical_id,
-                            cloudfront_certificate_arn_param.logical_id,
-                            cloudfront_aliases_param.logical_id,
-                            cloudfront_price_class_param.logical_id
-                        ]
-                    },
                     vpc.metadata_parameter_group(),
                     {
                         "Label": {
@@ -2049,35 +1580,11 @@ class WordPressStack(core.Stack):
                     certificate_arn_param.logical_id: {
                         "default": "ACM Certificate ARN"
                     },
-                    cloudfront_aliases_param.logical_id: {
-                        "default": "CloudFront Aliases"
-                    },
-                    cloudfront_certificate_arn_param.logical_id: {
-                        "default": "CloudFront ACM Certificate ARN"
-                    },
-                    cloudfront_enable_param.logical_id: {
-                        "default": "Enable CloudFront"
-                    },
-                    cloudfront_price_class_param.logical_id: {
-                        "default": "CloudFront Price Class"
-                    },
                     db_snapshot_identifier_param.logical_id: {
                         "default": "RDS Snapshot Identifier"
                     },
                     db_instance_class_param.logical_id: {
                         "default": "RDS Instance Class"
-                    },
-                    elasticache_cluster_cache_node_type_param.logical_id: {
-                        "default": "ElastiCache Cache Node Type"
-                    },
-                    elasticache_cluster_engine_version_param.logical_id: {
-                        "default": "ElastiCache Engine Version"
-                    },
-                    elasticache_cluster_num_cache_nodes_param.logical_id: {
-                        "default": "ElastiCache Num Nodes"
-                    },
-                    elasticache_enable_param.logical_id: {
-                        "default": "Enable ElastiCache"
                     },
                     initialize_default_wordpress_param.logical_id: {
                         "default": "Initialize with a default WordPress codebase"

@@ -197,19 +197,6 @@ write_apache_env "NONCE_SALT"
 write_apache_env "SECURE_AUTH_KEY"
 write_apache_env "SECURE_AUTH_SALT"
 
-# elasticache values
-if [[ "${ElastiCacheEnable}" == "true" ]]
-then
-    jq -n --arg host "${ElastiCacheClusterHost}" --arg port "${ElastiCacheClusterPort}" \
-       '{host: $host, port: $port}' > /opt/oe/patterns/wordpress/elasticache.json
-fi
-
-# cloudfront values
-if [[ "${CloudFrontEnable}" == "true" ]]
-then
-    jq -n --arg host "${CloudFrontHost}" '{host: $host}' > /opt/oe/patterns/wordpress/cloudfront.json
-fi
-
 # apache
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -keyout /etc/ssl/private/apache-selfsigned.key \

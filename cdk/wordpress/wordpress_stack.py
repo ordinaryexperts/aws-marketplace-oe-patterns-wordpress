@@ -922,7 +922,7 @@ class WordPressStack(core.Stack):
                 ignore_unmodified_group_size_properties=True
             )
         )
-        core.Tag.add(asg, "Name", "{}/AppAsg".format(core.Aws.STACK_NAME))
+        core.Tags.of(asg).add("Name", "{}/AppAsg".format(core.Aws.STACK_NAME))
         asg.add_depends_on(db_cluster)
         asg_web_server_scale_up_policy = aws_autoscaling.CfnScalingPolicy(
             self,

@@ -78,6 +78,22 @@ deploy: build
 	--parameters VpcPublicSubnetId2=subnet-060c39a6ded9e89d7 \
 	--parameters WordPressHostname=wordpress-${USER}.dev.patterns.ordinaryexperts.com
 
+deploy-demo: build
+	docker-compose run -w /code/cdk --rm wordpress cdk deploy \
+	--require-approval never \
+	--parameters CertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/77ba53df-8613-4620-8b45-3d22940059d4 \
+	--parameters InitializeDefaultWordPress=false \
+	--parameters PipelineArtifactBucketName=github-user-and-bucket-taskcatbucket-2zppaw3wi3sx \
+	--parameters Route53HostedZoneName=dev.patterns.ordinaryexperts.com \
+	--parameters SourceArtifactBucketName=ordinary-experts-aws-marketplace-pattern-artifacts \
+	--parameters SourceArtifactObjectKey=wordpress-bedrock/demo-site/refs/heads/develop.zip \
+	--parameters VpcId=vpc-00425deda4c835455 \
+	--parameters VpcPrivateSubnetId1=subnet-030c94b9795c6cb96 \
+	--parameters VpcPrivateSubnetId2=subnet-079290412ce63c4d5 \
+	--parameters VpcPublicSubnetId1=subnet-0c2f5d4daa1792c8d \
+	--parameters VpcPublicSubnetId2=subnet-060c39a6ded9e89d7 \
+	--parameters WordPressHostname=wordpress-${USER}.dev.patterns.ordinaryexperts.com
+
 destroy: build
 	docker-compose run -w /code/cdk --rm wordpress cdk destroy
 

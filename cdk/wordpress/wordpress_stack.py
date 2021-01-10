@@ -585,6 +585,7 @@ class WordPressStack(core.Stack):
         http_listener = aws_elasticloadbalancingv2.CfnListener(
             self,
             "HttpListener",
+            # These are updated in the override below to fix case of properties - see below
             default_actions=[
                 core.Fn.condition_if(
                     certificate_arn_exists_condition.logical_id,
@@ -608,6 +609,44 @@ class WordPressStack(core.Stack):
             load_balancer_arn=alb.ref,
             port=80,
             protocol="HTTP"
+        )
+        # CDK generates ActionProperty with lowercase properties - need to override due to following error:
+        # Stack operations on resource HttpListener would fail starting from 03/01/2021 as the template has invalid properties.
+        # Please refer to the resource documentation to fix the template.
+        # Properties validation failed for resource HttpListener with message:
+        # #/DefaultActions/0: required key [Type] not found
+        # #/DefaultActions/0: extraneous key [type] is not permitted
+        # #/DefaultActions/0: extraneous key [redirectConfig] is not permitted
+        http_listener.add_override(
+            "Properties.DefaultActions",
+            [
+                {
+                    'Fn::If': [
+                        'CertificateArnExists',
+                        {
+                            'Type': 'redirect',
+                            'RedirectConfig': {
+                                'Host': "#{host}",
+                                'Path': "/#{path}",
+                                'Port': "443",
+                                'Protocol': "HTTPS",
+                                'Query': "#{query}",
+                                'StatusCode': "HTTP_301"
+                            }
+                        },
+                        {
+                            'Type': 'forward',
+                            'ForwardConfig': {
+                                'TargetGroups': [
+                                    {
+                                        'TargetGroupArn': http_target_group.ref
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
         )
 
         https_target_group = aws_elasticloadbalancingv2.CfnTargetGroup(

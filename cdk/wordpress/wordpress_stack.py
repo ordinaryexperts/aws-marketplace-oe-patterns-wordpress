@@ -586,39 +586,30 @@ class WordPressStack(core.Stack):
             self,
             "HttpListener",
             default_actions=[
-                aws_elasticloadbalancingv2.CfnListener.ActionProperty(
-                    target_group_arn=http_target_group.ref,
-                    type="forward"
+                core.Fn.condition_if(
+                    certificate_arn_exists_condition.logical_id,
+                    aws_elasticloadbalancingv2.CfnListener.ActionProperty(
+                        redirect_config=aws_elasticloadbalancingv2.CfnListener.RedirectConfigProperty(
+                            host="#{host}",
+                            path="/#{path}",
+                            port="443",
+                            protocol="HTTPS",
+                            query="#{query}",
+                            status_code="HTTP_301"
+                        ),
+                        type="redirect"
+                    ),
+                    aws_elasticloadbalancingv2.CfnListener.ActionProperty(
+                        target_group_arn=http_target_group.ref,
+                        type="forward"
+                    )
                 )
             ],
             load_balancer_arn=alb.ref,
             port=80,
             protocol="HTTP"
         )
-        http_listener.cfn_options.condition = certificate_arn_does_not_exist_condition
 
-        # if there is a cert...
-        http_redirect_listener = aws_elasticloadbalancingv2.CfnListener(
-            self,
-            "HttpRedirectListener",
-            default_actions=[
-                aws_elasticloadbalancingv2.CfnListener.ActionProperty(
-                    redirect_config=aws_elasticloadbalancingv2.CfnListener.RedirectConfigProperty(
-                        host="#{host}",
-                        path="/#{path}",
-                        port="443",
-                        protocol="HTTPS",
-                        query="#{query}",
-                        status_code="HTTP_301"
-                    ),
-                    type="redirect"
-                ),
-            ],
-            load_balancer_arn=alb.ref,
-            port=80,
-            protocol="HTTP"
-        )
-        http_redirect_listener.cfn_options.condition = certificate_arn_exists_condition
         https_target_group = aws_elasticloadbalancingv2.CfnTargetGroup(
             self,
             "AsgHttpsTargetGroup",

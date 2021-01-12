@@ -139,8 +139,7 @@ class WordPressStack(core.Stack):
         certificate_arn_param = core.CfnParameter(
             self,
             "CertificateArn",
-            default="",
-            description="Optional: Specify the ARN of a ACM Certificate to configure HTTPS."
+            description="Required: Specify the ARN of a ACM Certificate to configure HTTPS."
         )
         db_instance_class_param = core.CfnParameter(
             self,
@@ -178,7 +177,7 @@ class WordPressStack(core.Stack):
             self,
             "Route53HostedZoneName",
             default="",
-            description="Optional: Route 53 Hosted Zone name in which a DNS record will be created by this template. If supplied, must already exist and be the domain part of the WordPress Hostname parameter, without trailing dot. E.G. 'internal.mycompany.com'"
+            description="Optional: Route 53 Hosted Zone name in which a DNS record will be created by this template. If supplied, must already exist and be the domain part of the WordPress Hostname parameter, without trailing dot. i.e. 'mycompany.com'"
         )
         secret_arn_param = core.CfnParameter(
             self,
@@ -201,23 +200,15 @@ class WordPressStack(core.Stack):
         word_press_hostname_param = core.CfnParameter(
             self,
             "WordPressHostname",
-            description="Required: The hostname for the WordPress site, i.e. my-wordpress-site.mycompany.com - leave off the http:// or https://"
+            allowed_pattern="^(?!.*\/).*$",
+            constraint_description="WordPress Hostname should not have any forward slashes",
+            default="",
+            description="Optional: The hostname for the WordPress site, i.e. my-wordpress-site.mycompany.com - leave off the https:// and trailing slash."
         )
 
         #
         # CONDITIONS
         #
-
-        certificate_arn_exists_condition = core.CfnCondition(
-            self,
-            "CertificateArnExists",
-            expression=core.Fn.condition_not(core.Fn.condition_equals(certificate_arn_param.value, ""))
-        )
-        certificate_arn_does_not_exist_condition = core.CfnCondition(
-            self,
-            "CertificateArnNotExists",
-            expression=core.Fn.condition_equals(certificate_arn_param.value, "")
-        )
         db_snapshot_identifier_exists_condition = core.CfnCondition(
             self,
             "DbSnapshotIdentifierExistsCondition",
@@ -267,6 +258,11 @@ class WordPressStack(core.Stack):
             self,
             "Route53HostedZoneNameExists",
             expression=core.Fn.condition_not(core.Fn.condition_equals(route_53_hosted_zone_name_param.value, ""))
+        )
+        word_press_hostname_exists_condition = core.CfnCondition(
+            self,
+            "WordPressHostnameExists",
+            expression=core.Fn.condition_not(core.Fn.condition_equals(word_press_hostname_param.value, ""))
         )
 
         #
@@ -564,46 +560,21 @@ class WordPressStack(core.Stack):
             subnets=vpc.public_subnet_ids(),
             type="application"
         )
-        # if there is no cert...
-        http_target_group = aws_elasticloadbalancingv2.CfnTargetGroup(
-            self,
-            "AsgHttpTargetGroup",
-            health_check_enabled=None,
-            health_check_interval_seconds=None,
-            port=80,
-            protocol="HTTP",
-            target_group_attributes=[
-                aws_elasticloadbalancingv2.CfnTargetGroup.TargetGroupAttributeProperty(
-                    key='deregistration_delay.timeout_seconds',
-                    value='10'
-                )
-            ],
-            target_type="instance",
-            vpc_id=vpc.id()
-        )
-        http_target_group.cfn_options.condition = certificate_arn_does_not_exist_condition
         http_listener = aws_elasticloadbalancingv2.CfnListener(
             self,
             "HttpListener",
             # These are updated in the override below to fix case of properties - see below
             default_actions=[
-                core.Fn.condition_if(
-                    certificate_arn_exists_condition.logical_id,
-                    aws_elasticloadbalancingv2.CfnListener.ActionProperty(
-                        redirect_config=aws_elasticloadbalancingv2.CfnListener.RedirectConfigProperty(
-                            host="#{host}",
-                            path="/#{path}",
-                            port="443",
-                            protocol="HTTPS",
-                            query="#{query}",
-                            status_code="HTTP_301"
-                        ),
-                        type="redirect"
+                aws_elasticloadbalancingv2.CfnListener.ActionProperty(
+                    redirect_config=aws_elasticloadbalancingv2.CfnListener.RedirectConfigProperty(
+                        host="#{host}",
+                        path="/#{path}",
+                        port="443",
+                        protocol="HTTPS",
+                        query="#{query}",
+                        status_code="HTTP_301"
                     ),
-                    aws_elasticloadbalancingv2.CfnListener.ActionProperty(
-                        target_group_arn=http_target_group.ref,
-                        type="forward"
-                    )
+                    type="redirect"
                 )
             ],
             load_balancer_arn=alb.ref,
@@ -621,30 +592,15 @@ class WordPressStack(core.Stack):
             "Properties.DefaultActions",
             [
                 {
-                    'Fn::If': [
-                        'CertificateArnExists',
-                        {
-                            'Type': 'redirect',
-                            'RedirectConfig': {
-                                'Host': "#{host}",
-                                'Path': "/#{path}",
-                                'Port': "443",
-                                'Protocol': "HTTPS",
-                                'Query': "#{query}",
-                                'StatusCode': "HTTP_301"
-                            }
-                        },
-                        {
-                            'Type': 'forward',
-                            'ForwardConfig': {
-                                'TargetGroups': [
-                                    {
-                                        'TargetGroupArn': http_target_group.ref
-                                    }
-                                ]
-                            }
-                        }
-                    ]
+                    'Type': 'redirect',
+                    'RedirectConfig': {
+                        'Host': "#{host}",
+                        'Path': "/#{path}",
+                        'Port': "443",
+                        'Protocol': "HTTPS",
+                        'Query': "#{query}",
+                        'StatusCode': "HTTP_301"
+                    }
                 }
             ]
         )
@@ -665,7 +621,6 @@ class WordPressStack(core.Stack):
             target_type="instance",
             vpc_id=vpc.id()
         )
-        https_target_group.cfn_options.condition = certificate_arn_exists_condition
         https_listener = aws_elasticloadbalancingv2.CfnListener(
             self,
             "HttpsListener",
@@ -684,7 +639,6 @@ class WordPressStack(core.Stack):
             port=443,
             protocol="HTTPS"
         )
-        https_listener.cfn_options.condition = certificate_arn_exists_condition
 
         # notifications
         notification_topic = aws_sns.CfnTopic(
@@ -909,9 +863,9 @@ class WordPressStack(core.Stack):
                         {
                             "WordPressHome": core.Token.as_string(
                                 core.Fn.condition_if(
-                                    certificate_arn_exists_condition.logical_id,
-                                    core.Fn.join("", ["https://", word_press_hostname_param.value_as_string]),
-                                    core.Fn.join("", ["http://", word_press_hostname_param.value_as_string])
+                                    word_press_hostname_exists_condition.logical_id,
+                                    word_press_hostname_param.value_as_string,
+                                    alb.attr_dns_name
                                 )
                             ),
                             "SecretArn": core.Token.as_string(
@@ -935,13 +889,7 @@ class WordPressStack(core.Stack):
             max_size=core.Token.as_string(asg_max_size_param.value),
             min_size=core.Token.as_string(asg_min_size_param.value),
             target_group_arns=[
-                core.Token.as_string(
-                    core.Fn.condition_if(
-                        certificate_arn_exists_condition.logical_id,
-                        https_target_group.ref,
-                        http_target_group.ref
-                    )
-                )
+                https_target_group.ref
             ],
             vpc_zone_identifier=vpc.private_subnet_ids()
         )
@@ -1018,17 +966,6 @@ class WordPressStack(core.Stack):
             threshold=70
         )
 
-        sg_http_ingress = aws_ec2.CfnSecurityGroupIngress(
-            self,
-            "AppSgHttpIngress",
-            from_port=80,
-            group_id=app_sg.ref,
-            ip_protocol="tcp",
-            source_security_group_id=alb_sg.ref,
-            to_port=80
-        )
-        sg_http_ingress.cfn_options.condition = certificate_arn_does_not_exist_condition
-
         sg_https_ingress = aws_ec2.CfnSecurityGroupIngress(
             self,
             "AppSgHttpsIngress",
@@ -1038,7 +975,6 @@ class WordPressStack(core.Stack):
             source_security_group_id=alb_sg.ref,
             to_port=443
         )
-        sg_https_ingress.cfn_options.condition = certificate_arn_exists_condition
 
         # codebuild
         codebuild_transform_service_role = aws_iam.CfnRole(
@@ -1553,6 +1489,22 @@ class WordPressStack(core.Stack):
                 "ParameterGroups": [
                     {
                         "Label": {
+                            "default": "Application Config"
+                        },
+                        "Parameters": [
+                            word_press_hostname_param.logical_id,
+                            route_53_hosted_zone_name_param.logical_id,
+                            certificate_arn_param.logical_id,
+                            secret_arn_param.logical_id,
+                            app_instance_type_param.logical_id,
+                            asg_min_size_param.logical_id,
+                            asg_max_size_param.logical_id,
+                            asg_desired_capacity_param.logical_id,
+                            initialize_default_wordpress_param.logical_id
+                        ]
+                    },
+                    {
+                        "Label": {
                             "default": "CI/CD"
                         },
                         "Parameters": [
@@ -1563,25 +1515,11 @@ class WordPressStack(core.Stack):
                     },
                     {
                         "Label": {
-                            "default": "Data Snapshots"
+                            "default": "Database Configuration"
                         },
                         "Parameters": [
-                            db_snapshot_identifier_param.logical_id,
-                            db_instance_class_param.logical_id
-                        ]
-                    },
-                    {
-                        "Label": {
-                            "default": "Application Config"
-                        },
-                        "Parameters": [
-                            certificate_arn_param.logical_id,
-                            secret_arn_param.logical_id,
-                            app_instance_type_param.logical_id,
-                            asg_min_size_param.logical_id,
-                            asg_max_size_param.logical_id,
-                            asg_desired_capacity_param.logical_id,
-                            initialize_default_wordpress_param.logical_id
+                            db_instance_class_param.logical_id,
+                            db_snapshot_identifier_param.logical_id
                         ]
                     },
                     vpc.metadata_parameter_group(),
@@ -1628,11 +1566,17 @@ class WordPressStack(core.Stack):
                     secret_arn_param.logical_id: {
                         "default": "SecretsManager secret ARN"
                     },
+                    route_53_hosted_zone_name_param.logical_id: {
+                        "default": "Route 53 Hosted Zone Name"
+                    },
                     source_artifact_bucket_name_param.logical_id: {
                         "default": "Source Artifact S3 Bucket Name"
                     },
                     source_artifact_object_key_param.logical_id: {
                         "default": "Source Artifact S3 Object Key (path)"
+                    },
+                    word_press_hostname_param.logical_id: {
+                        "default": "WordPress Hostname"
                     },
                     **vpc.metadata_parameter_labels()
                 }

@@ -4,6 +4,7 @@ services:
     build: .
     volumes:
     - .:/code
+    - /var/run/docker.sock:/var/run/docker.sock
     - /tmp/awspricing:/tmp/awspricing
     environment:
       - AWSPRICING_USE_CACHE=1

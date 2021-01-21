@@ -109,7 +109,7 @@ class WordPressStack(core.Stack):
             self,
             "AppLaunchConfigInstanceType",
             allowed_values=allowed_values["allowed_instance_types"],
-            default="m5.xlarge",
+            default="m5.large",
             description="Required: The EC2 instance type for the application Auto Scaling Group."
         )
         asg_desired_capacity_param = core.CfnParameter(
@@ -145,7 +145,7 @@ class WordPressStack(core.Stack):
             self,
             "DbInstanceClass",
             allowed_values=allowed_values["allowed_db_instance_types"],
-            default="db.r5.large",
+            default="db.t3.medium",
             description="Required: The class profile for memory and compute capacity for the database instance."
         )
         db_snapshot_identifier_param = core.CfnParameter(
@@ -159,7 +159,7 @@ class WordPressStack(core.Stack):
             "InitializeDefaultWordPress",
             allowed_values=[ "true", "false" ],
             default="true",
-            description="Optional: Trigger the first deployment with a copy of an initial default codebase from Ordinary Experts using WordPress 5 and some common plugins taking advantage of the stack capabilities."
+            description="Optional: Trigger the first deployment with a copy of an initial default codebase from Ordinary Experts using WordPress Bedrock 5.6."
         )
         notification_email_param = core.CfnParameter(
             self,

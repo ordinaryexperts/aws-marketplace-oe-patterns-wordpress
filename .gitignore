@@ -15,8 +15,6 @@ test/template.yaml
 test/taskcat_outputs
 test/main-test/template.yaml
 test/main-test/taskcat_outputs
-test/regions-test/template.yaml
-test/regions-test/taskcat_outputs
 
 # distributed files
 dist/*

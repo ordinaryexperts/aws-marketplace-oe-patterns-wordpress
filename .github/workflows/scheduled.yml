@@ -1,0 +1,32 @@
+# run all tests once weekly Monday 11am
+name: All Features and Regions Tests
+
+on:
+  schedule:
+    - cron: '0 18 * * 1' # run Mondays at 11am pacific
+
+jobs:
+  taskcat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: 'develop'
+      - name: build
+        run: make build
+      - name: test features
+        run: make test-all
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OE_PATTERNS_TASKCAT_DEV_GITHUB_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OE_PATTERNS_TASKCAT_DEV_GITHUB_AWS_SECRET_ACCESS_KEY }}
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: taskcat_outputs_features
+          path: test/taskcat_outputs/
+      - name: clean logs
+        if: always()
+        run: make clean-logs-tcat-all-regions
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OE_PATTERNS_TASKCAT_DEV_GITHUB_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OE_PATTERNS_TASKCAT_DEV_GITHUB_AWS_SECRET_ACCESS_KEY }}

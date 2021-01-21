@@ -62,10 +62,6 @@ deploy: build
 	docker-compose run -w /code/cdk --rm wordpress cdk deploy \
 	--require-approval never \
 	--parameters CertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/77ba53df-8613-4620-8b45-3d22940059d4 \
-	--parameters CloudFrontCertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/77ba53df-8613-4620-8b45-3d22940059d4 \
-	--parameters CloudFrontAliases=cdn-oe-patterns-wordpress-${USER}.dev.patterns.ordinaryexperts.com \
-	--parameters CloudFrontEnable=false \
-	--parameters ElastiCacheEnable=false \
 	--parameters InitializeDefaultWordPress=true \
 	--parameters PipelineArtifactBucketName=github-user-and-bucket-taskcatbucket-2zppaw3wi3sx \
 	--parameters Route53HostedZoneName=dev.patterns.ordinaryexperts.com \
@@ -129,20 +125,8 @@ synth-to-file: build
 	--asset-metadata false > /code/dist/template.yaml \
 	&& echo 'Template saved to dist/template.yaml'"
 
-test-all: build
-	docker-compose run -w /code --rm wordpress bash -c "cd cdk \
-	&& cdk synth > ../test/template.yaml \
-	&& cd ../test \
-	&& taskcat test run"
-
 test-main: build
 	docker-compose run -w /code --rm wordpress bash -c "cd cdk \
 	&& cdk synth > ../test/main-test/template.yaml \
 	&& cd ../test/main-test \
-	&& taskcat test run"
-
-test-regions: build
-	docker-compose run -w /code --rm wordpress bash -c "cd cdk \
-	&& cdk synth > ../test/regions-test/template.yaml \
-	&& cd ../test/regions-test \
 	&& taskcat test run"

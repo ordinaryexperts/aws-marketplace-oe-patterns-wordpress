@@ -1456,17 +1456,25 @@ class WordPressStack(core.Stack):
         #
         # OUTPUTS
         #
-
-        alb_dns_name_output = core.CfnOutput(
-            self,
-            "AlbDnsNameOutput",
-            description="The DNS name of the application load balancer.",
-            value=alb.attr_dns_name
-        )
         source_artifact_bucket_name_output = core.CfnOutput(
             self,
             "SourceArtifactBucketNameOutput",
             value=source_artifact_bucket_name
+        )
+        source_artifact_object_key_output = core.CfnOutput(
+            self,
+            "SourceArtifactObjectKeyOutput",
+            value=source_artifact_object_key_param.value_as_string
+        )
+        word_press_site_url_output = core.CfnOutput(
+            self,
+            "WordPressSiteUrlOutput",
+            value=core.Token.as_string(
+                core.Fn.condition_if(
+                word_press_hostname_exists_condition.logical_id,
+                "https://{}".format(word_press_hostname_param.value_as_string),
+                "https://{}".format(alb.attr_dns_name)
+            ))
         )
 
         # route 53

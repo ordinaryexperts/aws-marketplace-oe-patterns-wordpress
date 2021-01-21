@@ -32,7 +32,7 @@ def lambda_handler(event, context):
                 # in this case that means a 404 ClientError from the HeadObject request
                 if e.response["Error"]["Code"] == "404":
                     copy_source = os.environ["DefaultWordPressSourceUrl"]
-                    local_file = "/tmp/drupal.zip"
+                    local_file = "/tmp/wordpress.zip"
                     logger.info("Copying {} to {}/{}".format(
                         copy_source,
                         os.environ["SourceArtifactBucket"],

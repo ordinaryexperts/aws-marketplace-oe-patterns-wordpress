@@ -1459,16 +1459,19 @@ class WordPressStack(core.Stack):
         source_artifact_bucket_name_output = core.CfnOutput(
             self,
             "SourceArtifactBucketNameOutput",
+            description="The Source Artifact Bucket Name that is monitored for updates to be deployed",
             value=source_artifact_bucket_name
         )
         source_artifact_object_key_output = core.CfnOutput(
             self,
             "SourceArtifactObjectKeyOutput",
+            description="The Source Artifact Object Key that is monitored for updates to be deployed",
             value=source_artifact_object_key_param.value_as_string
         )
         word_press_site_url_output = core.CfnOutput(
             self,
             "WordPressSiteUrlOutput",
+            description="The WordPress URL Endpoint",
             value=core.Token.as_string(
                 core.Fn.condition_if(
                 word_press_hostname_exists_condition.logical_id,

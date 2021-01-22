@@ -125,6 +125,12 @@ synth-to-file: build
 	--asset-metadata false > /code/dist/template.yaml \
 	&& echo 'Template saved to dist/template.yaml'"
 
+test-all: build
+	docker-compose run -w /code --rm wordpress bash -c "cd cdk \
+	&& cdk synth > ../test/template.yaml \
+	&& cd ../test \
+	&& taskcat test run"
+
 test-main: build
 	docker-compose run -w /code --rm wordpress bash -c "cd cdk \
 	&& cdk synth > ../test/main-test/template.yaml \

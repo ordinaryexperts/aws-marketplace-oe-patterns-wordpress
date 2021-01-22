@@ -183,7 +183,7 @@ class WordPressStack(core.Stack):
             self,
             "SecretArn",
             default="",
-            description="Optional: SecretsManager secret ARN used to store database credentials and other configuration. If not specified, a secret will be created."
+            description="Optional: Secrets Manager secret ARN used to store database credentials and other configuration. If not specified, a secret will be created."
         )
         source_artifact_bucket_name_param = core.CfnParameter(
             self,
@@ -1575,7 +1575,7 @@ class WordPressStack(core.Stack):
                         "default": "CodePipeline Bucket Name"
                     },
                     secret_arn_param.logical_id: {
-                        "default": "SecretsManager secret ARN"
+                        "default": "Secrets Manager secret ARN"
                     },
                     route_53_hosted_zone_name_param.logical_id: {
                         "default": "Route 53 Hosted Zone Name"

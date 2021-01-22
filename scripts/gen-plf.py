@@ -32,7 +32,7 @@ plf_config = yaml.load(
 plf_values = {}
 
 allowed_values = yaml.load(
-    open("/code/cdk/drupal/allowed_values.yaml"),
+    open("/code/cdk/wordpress/allowed_values.yaml"),
     Loader=yaml.SafeLoader
 )
 allowed_instance_types = allowed_values["allowed_instance_types"]

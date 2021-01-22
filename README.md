@@ -13,7 +13,7 @@ The Ordinary Experts WordPress Bedrock Pattern is an open-source AWS CloudFormat
 
 For this pattern to work, you must first:
 
-1. Have a AWS Certificate Manager certificate provisioned
+1. Have an AWS Certificate Manager certificate provisioned
 
 After that you can just launch the CloudFormation stack and fill out the required parameters.
 

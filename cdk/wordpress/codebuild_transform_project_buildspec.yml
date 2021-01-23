@@ -1,0 +1,59 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - |
+        if [ ! -f appspec.yml ]; then
+          cat << EOF > appspec.yml;
+        version: 0.0
+        os: linux
+        files:
+          - source: .
+            destination: /var/www/app
+        hooks:
+        EOF
+          mkdir -p scripts;
+          if [ ! -f scripts/codedeploy-before-install.sh ]; then
+            cat << EOF > scripts/codedeploy-before-install.sh;
+        #!/bin/bash
+        echo "$(date): Starting codedeploy-before-install.sh..."
+        echo "$(date): Finishing codedeploy-before-install.sh..."
+        EOF
+            cat << EOF >> appspec.yml;
+          BeforeInstall:
+            - location: scripts/codedeploy-before-install.sh
+              runas: root
+        EOF
+          fi
+          if [ ! -f scripts/codedeploy-after-install.sh ]; then
+            cat << EOF > scripts/codedeploy-after-install.sh;
+        #!/bin/bash
+        echo "$(date): Starting codedeploy-after-install.sh..."
+        if [ ! -L /var/www/app/bedrock/web/app/uploads ]; then
+          rm -rf /var/www/app/bedrock/web/app/uploads
+          ln -s /mnt/efs/wordpress/uploads /var/www/app/bedrock/web/app/uploads
+        fi
+        chown -R www-data:www-data /var/www/app
+        find /var/www/app -type d -exec chmod 755 {} +
+        find /var/www/app -type f -exec chmod 644 {} +
+        echo "$(date): Finishing codedeploy-after-install.sh."
+        EOF
+            cat << EOF >> appspec.yml;
+          AfterInstall:
+            - location: scripts/codedeploy-after-install.sh
+              runas: root
+        EOF
+          fi
+        fi
+      - cat appspec.yml
+      - cat scripts/codedeploy-before-install.sh
+      - cat scripts/codedeploy-after-install.sh
+      - curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
+      - php /tmp/composer-setup.php --install-dir=.
+      - cd bedrock && ../composer.phar install
+    finally:
+      - echo Finished build
+artifacts:
+  files:
+    - "**/*"

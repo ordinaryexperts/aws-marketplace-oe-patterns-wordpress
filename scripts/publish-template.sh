@@ -18,6 +18,6 @@ TEMPLATE_VERSION=$VERSION cdk synth \
 cd $DIR/..
 
 aws s3 cp dist/template.yaml \
-	s3://ordinary-experts-aws-marketplace-drupal-pattern-artifacts/templates/$VERSION/oe-drupal-patterns-template.yaml \
+	s3://ordinary-experts-aws-marketplace-pattern-artifacts/wordpress/$VERSION/template.yaml \
 	--acl public-read
-echo "Copied to https://ordinary-experts-aws-marketplace-drupal-pattern-artifacts.s3.amazonaws.com/templates/$VERSION/oe-drupal-patterns-template.yaml"
+echo "Copied to https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/wordpress/$VERSION/template.yaml"

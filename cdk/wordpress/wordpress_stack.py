@@ -112,6 +112,13 @@ class WordPressStack(core.Stack):
             default="m5.large",
             description="Required: The EC2 instance type for the application Auto Scaling Group."
         )
+        asg_key_name_param = core.CfnParameter(
+            self,
+            "AppAsgKeyName",
+            default="",
+            description="Optional: EC2 key pair for SSH to instances. Note: AWS Session Manager is supported and is the recommended way to connect to instances.",
+            type="String"
+        )
         asg_desired_capacity_param = core.CfnParameter(
             self,
             "AppAsgDesiredCapacity",
@@ -209,6 +216,11 @@ class WordPressStack(core.Stack):
         #
         # CONDITIONS
         #
+        asg_key_name_exists_condition = core.CfnCondition(
+            self,
+            "AsgKeyNameExistsCondition",
+            expression=core.Fn.condition_not(core.Fn.condition_equals(asg_key_name_param.value, ""))
+        )
         db_snapshot_identifier_exists_condition = core.CfnCondition(
             self,
             "DbSnapshotIdentifierExistsCondition",
@@ -855,6 +867,13 @@ class WordPressStack(core.Stack):
             image_id=core.Fn.find_in_map("AWSAMIRegionMap", core.Aws.REGION, "OEWORDPRESS"),
             instance_type=app_instance_type_param.value_as_string,
             iam_instance_profile=instance_profile.ref,
+            key_name=core.Token.as_string(
+                core.Fn.condition_if(
+                    asg_key_name_exists_condition.logical_id,
+                    asg_key_name_param.value_as_string,
+                    core.Aws.NO_VALUE
+                )
+            ),
             security_groups=[app_sg.ref],
             user_data=(
                 core.Fn.base64(
@@ -1508,6 +1527,7 @@ class WordPressStack(core.Stack):
                             certificate_arn_param.logical_id,
                             secret_arn_param.logical_id,
                             app_instance_type_param.logical_id,
+                            asg_key_name_param.logical_id,
                             asg_min_size_param.logical_id,
                             asg_max_size_param.logical_id,
                             asg_desired_capacity_param.logical_id,
@@ -1546,6 +1566,9 @@ class WordPressStack(core.Stack):
                 "ParameterLabels": {
                     app_instance_type_param.logical_id: {
                         "default": "Instance Type"
+                    },
+                    asg_key_name_param.logical_id: {
+                        "default": "Auto Scaling Group EC2 Key Name"
                     },
                     asg_desired_capacity_param.logical_id: {
                         "default": "Auto Scaling Group Desired Capacity"

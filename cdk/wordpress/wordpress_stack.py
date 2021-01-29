@@ -390,13 +390,13 @@ class WordPressStack(core.Stack):
         app_sg = aws_ec2.CfnSecurityGroup(
             self,
             "AppSg",
-            group_description="App SG",
+            group_description="{}/App".format(core.Aws.STACK_NAME),
             vpc_id=vpc.id()
         )
         db_sg = aws_ec2.CfnSecurityGroup(
             self,
             "DbSg",
-            group_description="Database SG",
+            group_description="{}/Db".format(core.Aws.STACK_NAME),
             vpc_id=vpc.id()
         )
         db_sg_ingress = aws_ec2.CfnSecurityGroupIngress(
@@ -411,13 +411,13 @@ class WordPressStack(core.Stack):
         db_subnet_group = aws_rds.CfnDBSubnetGroup(
             self,
             "DbSubnetGroup",
-            db_subnet_group_description="MySQL Aurora DB Subnet Group",
+            db_subnet_group_description=core.Aws.STACK_NAME,
             subnet_ids=vpc.private_subnet_ids()
         )
         db_cluster_parameter_group = aws_rds.CfnDBClusterParameterGroup(
             self,
             "DbClusterParameterGroup",
-            description="test",
+            description=core.Aws.STACK_NAME,
             family="aurora-mysql5.7",
             parameters={
                 "character_set_client": "utf8",
@@ -433,7 +433,7 @@ class WordPressStack(core.Stack):
         db_parameter_group = aws_rds.CfnDBParameterGroup(
             self,
             "DbParameterGroup",
-            description="Aurora DB Instance Parameter Group",
+            description=core.Aws.STACK_NAME,
             family="aurora-mysql5.7",
             parameters={
                 "general_log": "1",
@@ -541,7 +541,7 @@ class WordPressStack(core.Stack):
         alb_sg = aws_ec2.CfnSecurityGroup(
             self,
             "AlbSg",
-            group_description="Alb Sg",
+            group_description="{}/Alb".format(core.Aws.STACK_NAME),
             vpc_id=vpc.id()
         )
         alb_http_ingress = aws_ec2.CfnSecurityGroupIngress(
@@ -702,7 +702,7 @@ class WordPressStack(core.Stack):
         efs_sg = aws_ec2.CfnSecurityGroup(
             self,
             "EfsSg",
-            group_description="EFS SG",
+            group_description="{}/Efs".format(core.Aws.STACK_NAME),
             vpc_id=vpc.id()
         )
         efs_sg_ingress = aws_ec2.CfnSecurityGroupIngress(
@@ -719,6 +719,7 @@ class WordPressStack(core.Stack):
             "AppEfs",
             encrypted=True
         )
+        core.Tags.of(efs).add("Name", "{}/Efs".format(core.Aws.STACK_NAME))
         efs_mount_target1 = aws_efs.CfnMountTarget(
             self,
             "AppEfsMountTarget1",

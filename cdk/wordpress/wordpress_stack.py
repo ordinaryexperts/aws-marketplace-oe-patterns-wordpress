@@ -393,15 +393,18 @@ class WordPressStack(core.Stack):
             group_description="{}/App".format(core.Aws.STACK_NAME),
             vpc_id=vpc.id()
         )
+        core.Tags.of(app_sg).add("Name", "{}/AppSg".format(core.Aws.STACK_NAME))
         db_sg = aws_ec2.CfnSecurityGroup(
             self,
             "DbSg",
             group_description="{}/Db".format(core.Aws.STACK_NAME),
             vpc_id=vpc.id()
         )
+        core.Tags.of(db_sg).add("Name", "{}/DbSg".format(core.Aws.STACK_NAME))
         db_sg_ingress = aws_ec2.CfnSecurityGroupIngress(
             self,
             "DbSgIngress",
+            description="Allow MySQL traffic to DbSg from AppSg",
             from_port=3306,
             group_id=db_sg.ref,
             ip_protocol="tcp",
@@ -541,14 +544,15 @@ class WordPressStack(core.Stack):
         alb_sg = aws_ec2.CfnSecurityGroup(
             self,
             "AlbSg",
-            group_description="{}/Alb".format(core.Aws.STACK_NAME),
+            group_description="{}/AlbSg".format(core.Aws.STACK_NAME),
             vpc_id=vpc.id()
         )
+        core.Tags.of(alb_sg).add("Name", "{}/AlbSg".format(core.Aws.STACK_NAME))
         alb_http_ingress = aws_ec2.CfnSecurityGroupIngress(
             self,
             "AlbSgHttpIngress",
             cidr_ip="0.0.0.0/0",
-            description="Allow from anyone on port 80",
+            description="Allow HTTP traffic to ALB from anyone",
             from_port=80,
             group_id=alb_sg.ref,
             ip_protocol="tcp",
@@ -558,7 +562,7 @@ class WordPressStack(core.Stack):
             self,
             "AlbSgHttpsIngress",
             cidr_ip="0.0.0.0/0",
-            description="Allow from anyone on port 443",
+            description="Allow HTTPS traffic to ALB from anyone",
             from_port=443,
             group_id=alb_sg.ref,
             ip_protocol="tcp",
@@ -708,6 +712,7 @@ class WordPressStack(core.Stack):
         efs_sg_ingress = aws_ec2.CfnSecurityGroupIngress(
             self,
             "EfsSgIngress",
+            description="Allow EFS traffic from AppSg to EfsSg",
             from_port=2049,
             group_id=efs_sg.ref,
             ip_protocol="tcp",
@@ -989,6 +994,7 @@ class WordPressStack(core.Stack):
         sg_https_ingress = aws_ec2.CfnSecurityGroupIngress(
             self,
             "AppSgHttpsIngress",
+            description="Allow HTTPS traffic from AlbSg to AppSg",
             from_port=443,
             group_id=app_sg.ref,
             ip_protocol="tcp",

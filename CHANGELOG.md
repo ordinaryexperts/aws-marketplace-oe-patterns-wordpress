@@ -1,7 +1,7 @@
 # Unreleased
 
 * Add AppAsgKeyName for optional SSH access
-* Update descriptions
+* Update descriptions and tags
 
 # 1.0.0
 

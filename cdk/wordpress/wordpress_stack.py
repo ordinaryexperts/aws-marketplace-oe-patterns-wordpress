@@ -1554,7 +1554,7 @@ class WordPressStack(core.Stack):
                             db_snapshot_identifier_param.logical_id
                         ]
                     },
-                    vpc.metadata_parameter_group(),
+                    *vpc.metadata_parameter_group(),
                     {
                         "Label": {
                             "default": "Template Development"

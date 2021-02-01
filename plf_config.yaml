@@ -169,7 +169,7 @@ The template ensure multi-level security by incorporating AWS IAM for federated 
 
 We support multiple availability zones using an RDS Aurora MySQL cluster and EC2 Auto Scaling Groups."
 "Clusters and AWS Resources Topology 1: CloudFormation Template URL": "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/wordpress/{{version}}/template.yaml"
-"Clusters and AWS Resources Topology 1: Architecture Diagram URL": "https://ordinaryexperts.com/img/services/oe_wordpress_patterns_topology_diagram.png"
+"Clusters and AWS Resources Topology 1: Architecture Diagram URL": "https://ordinaryexperts.com/img/products/wordpress-pattern/wordpress-architecture-diagram.png"
 "Clusters and AWS Resources Topology 2: Title": ""
 "Clusters and AWS Resources Topology 2: AWS Calculator Link": ""
 "Clusters and AWS Resources Topology 2: Short Description": ""

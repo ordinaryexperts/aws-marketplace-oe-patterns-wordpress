@@ -105,6 +105,13 @@ class WordPressStack(core.Stack):
         # PARAMETERS
         #
 
+        alb_ingress_cidr_param = core.CfnParameter(
+            self,
+            "AlbIngressCidr",
+            allowed_pattern="^((\d{1,3})\.){3}\d{1,3}/\d{1,2}$",
+            default="0.0.0.0/0",
+            description="Optional: VPC IPv4 CIDR block to restrict public access to ALB (default is 0.0.0.0/0 which is open to internet)."
+        )
         app_instance_type_param = core.CfnParameter(
             self,
             "AppLaunchConfigInstanceType",
@@ -196,13 +203,13 @@ class WordPressStack(core.Stack):
             self,
             "SourceArtifactBucketName",
             default="",
-            description="Optional: Specify a S3 Bucket name which will contain the build artifacts for the application. If not specified, a bucket will be created."
+            description="Optional: Specify a S3 bucket name which will contain the build artifacts for the application. If not specified, a bucket will be created."
         )
         source_artifact_object_key_param = core.CfnParameter(
             self,
             "SourceArtifactObjectKey",
             default="wordpress.zip",
-            description="Required: AWS S3 Object key (path) for the build artifact for the application.  Updates to this object will trigger a deployment."
+            description="Required: AWS S3 object key (path) for the build artifact for the application. Updates to this object will trigger a deployment."
         )
         word_press_hostname_param = core.CfnParameter(
             self,
@@ -551,7 +558,7 @@ class WordPressStack(core.Stack):
         alb_http_ingress = aws_ec2.CfnSecurityGroupIngress(
             self,
             "AlbSgHttpIngress",
-            cidr_ip="0.0.0.0/0",
+            cidr_ip=alb_ingress_cidr_param.value_as_string,
             description="Allow HTTP traffic to ALB from anyone",
             from_port=80,
             group_id=alb_sg.ref,
@@ -561,7 +568,7 @@ class WordPressStack(core.Stack):
         alb_https_ingress = aws_ec2.CfnSecurityGroupIngress(
             self,
             "AlbSgHttpsIngress",
-            cidr_ip="0.0.0.0/0",
+            cidr_ip=alb_ingress_cidr_param.value_as_string,
             description="Allow HTTPS traffic to ALB from anyone",
             from_port=443,
             group_id=alb_sg.ref,
@@ -1485,13 +1492,13 @@ class WordPressStack(core.Stack):
         source_artifact_bucket_name_output = core.CfnOutput(
             self,
             "SourceArtifactBucketNameOutput",
-            description="The Source Artifact Bucket Name that is monitored for updates to be deployed",
+            description="The source artifact S3 bucket name that is monitored for updates to be deployed",
             value=source_artifact_bucket_name
         )
         source_artifact_object_key_output = core.CfnOutput(
             self,
             "SourceArtifactObjectKeyOutput",
-            description="The Source Artifact Object Key that is monitored for updates to be deployed",
+            description="The source artifact S3 object key that is monitored for updates to be deployed",
             value=source_artifact_object_key_param.value_as_string
         )
         word_press_site_url_output = core.CfnOutput(
@@ -1531,6 +1538,7 @@ class WordPressStack(core.Stack):
                         "Parameters": [
                             word_press_hostname_param.logical_id,
                             route_53_hosted_zone_name_param.logical_id,
+                            alb_ingress_cidr_param.logical_id,
                             certificate_arn_param.logical_id,
                             secret_arn_param.logical_id,
                             app_instance_type_param.logical_id,
@@ -1571,6 +1579,9 @@ class WordPressStack(core.Stack):
                     }
                 ],
                 "ParameterLabels": {
+                    alb_ingress_cidr_param.logical_id: {
+                        "default": "ALB Ingress CIDR"
+                    },
                     app_instance_type_param.logical_id: {
                         "default": "Instance Type"
                     },

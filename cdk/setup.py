@@ -3,12 +3,12 @@ import setuptools
 with open("README.md") as fp:
     long_description = fp.read()
 
-
-CDK_VERSION="1.83.0"
+# this is also set in setup-env.sh
+CDK_VERSION="1.87.1"
 
 setuptools.setup(
     name="wordpress",
-    version="0.1.0",
+    version="1.0.0",
 
     description="AWS Marketplace Pattern for WordPress by Ordinary Experts.",
     long_description=long_description,
@@ -39,7 +39,7 @@ setuptools.setup(
         f"aws-cdk.aws-sns=={CDK_VERSION}",
         f"aws-cdk.aws-ssm=={CDK_VERSION}",
         f"aws-cdk.core=={CDK_VERSION}",
-        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@1.4.0"
+        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@2.0.1"
     ],
 
     python_requires=">=3.6",

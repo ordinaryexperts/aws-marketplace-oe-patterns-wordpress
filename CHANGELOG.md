@@ -1,5 +1,7 @@
 # Unreleased
 
+# 1.1.0
+
 * Add AppAsgKeyName for optional SSH access
 * Update descriptions and tags
 * Add option to restrict IP CIDR on ALB SG

@@ -64,7 +64,7 @@ Optional configurations include the following:
 
 ## Stack Infrastructure
 
-![Topology Diagram](https://ordinaryexperts.com/img/services/oe_wordpress_patterns_topology_diagram.png)
+![Topology Diagram](https://ordinaryexperts.com/img/products/wordpress-pattern/wordpress-architecture-diagram.png)
 
 ## Developer Setup
 

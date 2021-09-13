@@ -61,7 +61,7 @@ clean-snapshots-tcat-all-regions: build
 deploy: build
 	docker-compose run -w /code/cdk --rm wordpress cdk deploy \
 	--require-approval never \
-	--parameters CertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/77ba53df-8613-4620-8b45-3d22940059d4 \
+	--parameters CertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e \
 	--parameters InitializeDefaultWordPress=true \
 	--parameters PipelineArtifactBucketName=github-user-and-bucket-taskcatbucket-2zppaw3wi3sx \
 	--parameters Route53HostedZoneName=dev.patterns.ordinaryexperts.com \
@@ -77,7 +77,7 @@ deploy: build
 deploy-demo: build
 	docker-compose run -w /code/cdk --rm wordpress cdk deploy \
 	--require-approval never \
-	--parameters CertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/77ba53df-8613-4620-8b45-3d22940059d4 \
+	--parameters CertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e \
 	--parameters InitializeDefaultWordPress=false \
 	--parameters PipelineArtifactBucketName=github-user-and-bucket-taskcatbucket-2zppaw3wi3sx \
 	--parameters Route53HostedZoneName=dev.patterns.ordinaryexperts.com \

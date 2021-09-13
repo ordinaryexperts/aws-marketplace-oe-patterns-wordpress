@@ -1,5 +1,7 @@
 # Unreleased
 
+* Fix expired cert for dev account
+
 # 1.1.0
 
 * Add AppAsgKeyName for optional SSH access

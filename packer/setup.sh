@@ -12,9 +12,15 @@ apt-get -y update && apt-get -y upgrade
 # install helpful utilities
 apt-get -y install curl git jq ntp software-properties-common unzip vim wget zip
 
+# remove python2.7
+apt-get -y remove --purge python2.7
+apt-get -y autoremove
+ln -s /usr/bin/python3 /usr/bin/python
+
 # install latest CFN utilities
-apt-get -y install python-pip
-pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+apt-get -y install python3-pip
+ln -s /usr/bin/pip3 /usr/bin/pip
+pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
 
 # install aws cli
 cd /tmp

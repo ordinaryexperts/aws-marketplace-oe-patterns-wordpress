@@ -1,5 +1,6 @@
 # Unreleased
 
+* Updating packages to resolve CVE-2021-3177
 * Fix expired cert for dev account
 
 # 1.1.0

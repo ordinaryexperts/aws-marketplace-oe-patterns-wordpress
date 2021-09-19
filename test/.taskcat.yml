@@ -9,7 +9,7 @@ tests:
   # region compatibility testing
   allResourcesUsEast1:
     parameters:
-      CertificateArn: arn:aws:acm:us-east-1:992593896645:certificate/77ba53df-8613-4620-8b45-3d22940059d4
+      CertificateArn: arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-2zppaw3wi3sx
       Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub

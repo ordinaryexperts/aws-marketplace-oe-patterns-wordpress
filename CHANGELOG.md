@@ -1,5 +1,13 @@
 # Unreleased
 
+* Lifecycle management support for EFS
+* AWS Backup support for EFS
+* Parameterize RDS backup retention period
+* Use common make targets
+* Upgrade CDK to 1.137.0
+* Upgrade oe-patterns-cdk-common to 2.0.2
+* Upgrade nodejs to 14.x in devenv
+
 # 1.2.0
 
 * Updating packages to resolve CVE-2021-3177

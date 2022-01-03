@@ -3,7 +3,7 @@
 echo "$(date): Starting setup-env.sh"
 
 # this is also set in cdk/setup.py
-export CDK_VERSION=1.87.1
+export CDK_VERSION=1.137.0
 export PACKER_VERSION=1.5.5
 export TASKCAT_VERSION=0.9.21
 
@@ -34,8 +34,11 @@ pip3 install -q taskcat==$TASKCAT_VERSION
 # For scripts/gen-pfl.py
 pip3 install -q awspricing pystache
 
+# more recent nodejs
+curl -sL https://deb.nodesource.com/setup_14.x | bash -
+apt-get -y -q install nodejs
+
 # cdk
-apt-get -y -q install npm
 npm install -g aws-cdk@$CDK_VERSION
 
 # packer

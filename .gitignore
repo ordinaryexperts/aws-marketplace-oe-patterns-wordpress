@@ -21,3 +21,7 @@ dist/*
 
 # packer manifest file
 manifest.json
+
+# shared Makefiles/scripts
+common.mk
+scripts/common/*

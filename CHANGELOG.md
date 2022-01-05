@@ -1,5 +1,7 @@
 # Unreleased
 
+# 1.3.0
+
 * Lifecycle management support for EFS
 * AWS Backup support for EFS
 * Parameterize RDS backup retention period

@@ -187,7 +187,7 @@ class WordPressStack(core.Stack):
         efs_transition_to_ia_param = core.CfnParameter(
             self,
             "EfsTransitionToIa",
-            allowed_values=[ "", "AFTER_14_DAYS", "AFTER_30_DAYS", "AFTER_60_DAYS", "AFTER_7_DAYS", "AFTER_90_DAYS" ],
+            allowed_values=[ "", "AFTER_7_DAYS", "AFTER_14_DAYS", "AFTER_30_DAYS", "AFTER_60_DAYS", "AFTER_90_DAYS" ],
             default="",
             description="Describes the period of time that a file is not accessed, after which it transitions to IA storage. Metadata operations such as listing the contents of a directory don't count as file access events."
         )

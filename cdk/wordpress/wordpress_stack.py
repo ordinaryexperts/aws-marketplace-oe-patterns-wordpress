@@ -30,7 +30,7 @@ from oe_patterns_cdk_common import (
     Vpc
 )
 
-DEFAULT_WORDPRESS_SOURCE_URL="https://ordinary-experts-aws-marketplace-wordpress-pattern-artifacts.s3.amazonaws.com/aws-marketplace-oe-patterns-wordpress-default/refs/heads/develop.zip"
+DEFAULT_WORDPRESS_SOURCE_URL="https://ordinary-experts-aws-marketplace-wordpress-pattern-artifacts.s3.amazonaws.com/aws-marketplace-oe-patterns-wordpress-default/refs/tags/1.0.0.zip"
 TWO_YEARS_IN_DAYS=731
 if 'TEMPLATE_VERSION' in os.environ:
     template_version = os.environ['TEMPLATE_VERSION']
@@ -203,7 +203,7 @@ class WordPressStack(core.Stack):
             "InitializeDefaultWordPress",
             allowed_values=[ "true", "false" ],
             default="true",
-            description="Optional: Trigger the first deployment with a copy of an initial default codebase from Ordinary Experts using WordPress Bedrock 5.6."
+            description="Optional: Trigger the first deployment with a copy of an initial default codebase from Ordinary Experts using WordPress Bedrock"
         )
         notification_email_param = core.CfnParameter(
             self,
@@ -240,6 +240,13 @@ class WordPressStack(core.Stack):
             "SourceArtifactObjectKey",
             default="wordpress.zip",
             description="Required: AWS S3 object key (path) for the build artifact for the application. Updates to this object will trigger a deployment."
+        )
+        word_press_env_param = core.CfnParameter(
+            self,
+            "WordPressEnv",
+            allowed_values=[ "development", "staging", "production" ],
+            default="production",
+            description="Optional: The environment (WP_ENV) for the WordPress site."
         )
         word_press_hostname_param = core.CfnParameter(
             self,
@@ -960,6 +967,7 @@ class WordPressStack(core.Stack):
                     core.Fn.sub(
                         app_launch_config_user_data,
                         {
+                            "WordPressEnv": word_press_env_param.value_as_string,
                             "WordPressHome": core.Token.as_string(
                                 core.Fn.condition_if(
                                     word_press_hostname_exists_condition.logical_id,

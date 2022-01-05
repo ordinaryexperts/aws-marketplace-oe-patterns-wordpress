@@ -176,7 +176,7 @@ echo "export DB_HOST=${DbCluster.Endpoint.Address}" >> /etc/apache2/envvars
 
 echo "" >> /etc/apache2/envvars
 
-echo "export WP_ENV=production" >> /etc/apache2/envvars
+echo "export WP_ENV=${WordPressEnv}" >> /etc/apache2/envvars
 echo "export WP_HOME=https://${WordPressHome}" >> /etc/apache2/envvars
 echo "export WP_SITEURL=https://${WordPressHome}/wp" >> /etc/apache2/envvars
 

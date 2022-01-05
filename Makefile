@@ -20,6 +20,7 @@ deploy: build
 	--parameters VpcPrivateSubnet2Id=subnet-079290412ce63c4d5 \
 	--parameters VpcPublicSubnet1Id=subnet-0c2f5d4daa1792c8d \
 	--parameters VpcPublicSubnet2Id=subnet-060c39a6ded9e89d7 \
+	--parameters WordPressEnv=production \
 	--parameters WordPressHostname=wordpress-${USER}.dev.patterns.ordinaryexperts.com
 
 deploy-demo: build

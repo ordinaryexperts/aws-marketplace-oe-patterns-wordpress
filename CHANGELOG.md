@@ -8,6 +8,7 @@
 * Upgrade oe-patterns-cdk-common to 2.0.2
 * Upgrade devenv nodejs to 14.x
 * Upgrade taskcat to 0.9.29
+* Upgrade default WP Bedrock install to 5.8
 
 # 1.2.0
 

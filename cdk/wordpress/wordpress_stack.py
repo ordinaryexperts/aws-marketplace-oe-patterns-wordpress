@@ -258,11 +258,6 @@ class WordPressStack(core.Stack):
             "AsgKeyNameExistsCondition",
             expression=core.Fn.condition_not(core.Fn.condition_equals(asg_key_name_param.value, ""))
         )
-        efs_automatic_backups_enabled_condition = core.CfnCondition(
-            self,
-            "AutomaticBackupsEnabledCondition",
-            expression=core.Fn.condition_equals(efs_automatic_backups_enabled_param.value, "ENABLED")
-        )
         efs_transition_to_ia_enabled_condition = core.CfnCondition(
             self,
             "TransitionToIaEnabledCondition",
@@ -795,6 +790,14 @@ class WordPressStack(core.Stack):
                 )
             ]
         )
+        # taskcat lint fails on valid LifecyclePolicy configurations
+        efs.cfn_options.metadata = {
+            "cfn-lint": {
+                "config": {
+                    "ignore_checks": ['E3002']
+                }
+            }
+        }
         core.Tags.of(efs).add("Name", "{}/Efs".format(core.Aws.STACK_NAME))
         efs_mount_target1 = aws_efs.CfnMountTarget(
             self,

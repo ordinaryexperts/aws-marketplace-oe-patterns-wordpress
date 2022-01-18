@@ -4,7 +4,7 @@ with open("README.md") as fp:
     long_description = fp.read()
 
 # this is also set in setup-env.sh
-CDK_VERSION="1.87.1"
+CDK_VERSION="1.137.0"
 
 setuptools.setup(
     name="wordpress",
@@ -39,7 +39,7 @@ setuptools.setup(
         f"aws-cdk.aws-sns=={CDK_VERSION}",
         f"aws-cdk.aws-ssm=={CDK_VERSION}",
         f"aws-cdk.core=={CDK_VERSION}",
-        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@2.0.1"
+        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@2.0.2"
     ],
 
     python_requires=">=3.6",

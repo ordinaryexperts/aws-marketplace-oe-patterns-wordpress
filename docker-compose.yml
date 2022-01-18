@@ -1,18 +1,17 @@
 version: '3'
 services:
-  wordpress:
+  devenv:
     build: .
     volumes:
     - .:/code
     - /var/run/docker.sock:/var/run/docker.sock
-    - /tmp/awspricing:/tmp/awspricing
     environment:
-      - AWSPRICING_USE_CACHE=1
       - AWS_ACCESS_KEY_ID
       - AWS_DEFAULT_REGION
       - AWS_REGION
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
+      - TEMPLATE_VERSION
       - USER
   ami:
     build: ./packer

@@ -1,5 +1,7 @@
 # Unreleased
 
+* Updating documentation for deploying apps
+
 # 1.3.0
 
 * Lifecycle management support for EFS

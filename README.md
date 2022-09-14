@@ -17,6 +17,16 @@ For this pattern to work, you must first:
 
 After that you can just launch the CloudFormation stack and fill out the required parameters.
 
+## Deploying new versions of your WordPress site
+
+To deploy new versions or an existing app you will need to zip up your site and push it to the S3 Bucket and Path referenced by the SourceArtifactBucketName and SourceArtifactObjectKey parameters. If you don't specify a value for SourceArtifactBucketName a new bucket will be created for you and the default value for SourceArtifactObjectKey is wordpress.zip.
+
+You can also look at our example and demo WordPress sites and their github actions, as they bundle the app in the appropriate way for this pattern:
+
+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-wordpress-demo-site/blob/main/.github/workflows/main.yml
+
+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-wordpress-default/blob/develop/.github/workflows/main.yml
+
 ## Technical Details
 
 * Debian 10 (Buster)

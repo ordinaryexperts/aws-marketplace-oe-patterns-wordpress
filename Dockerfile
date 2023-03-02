@@ -1,8 +1,5 @@
-FROM ubuntu:20.04
-
-COPY setup-env.sh /tmp/setup-env.sh
-RUN bash /tmp/setup-env.sh
-RUN rm -f /tmp/setup-env.sh
+FROM ordinaryexperts/aws-marketplace-patterns-devenv:2.1.4
+# FROM devenv:latest
 
 # install dependencies
 RUN mkdir -p /tmp/code/cdk/wordpress

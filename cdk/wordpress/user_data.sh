@@ -36,85 +36,85 @@ cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
         "collect_list": [
           {
             "file_path": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgSystemLogGroup}",
             "log_stream_name": "{instance_id}-/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/dpkg.log",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgSystemLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/dpkg.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/apt/history.log",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgSystemLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/apt/history.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/cloud-init.log",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgSystemLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/cloud-init.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/cloud-init-output.log",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgSystemLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/cloud-init-output.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/auth.log",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgSystemLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/auth.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/syslog",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgSystemLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/syslog",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/amazon/ssm/amazon-ssm-agent.log",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgSystemLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/amazon/ssm/amazon-ssm-agent.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/amazon/ssm/errors.log",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgSystemLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/amazon/ssm/errors.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/wordpress-cache.log",
-            "log_group_name": "${WordPressSystemLogGroup}",
+            "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/wordpress-cache.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/apache2/access.log",
-            "log_group_name": "${WordPressAccessLogGroup}",
+            "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/apache2/access.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/apache2/error.log",
-            "log_group_name": "${WordPressErrorLogGroup}",
+            "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/apache2/error.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/apache2/access-ssl.log",
-            "log_group_name": "${WordPressAccessLogGroup}",
+            "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/apache2/access-ssl.log",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/apache2/error-ssl.log",
-            "log_group_name": "${WordPressErrorLogGroup}",
+            "log_group_name": "${AsgAppLogGroup}",
             "log_stream_name": "{instance_id}-/var/log/apache2/error-ssl.log",
             "timezone": "UTC"
           }
@@ -138,7 +138,7 @@ chown www-data /mnt/efs/wordpress/uploads
 mkdir -p /opt/oe/patterns/wordpress
 
 # secretsmanager
-SECRET_ARN="${SecretArn}"
+SECRET_ARN="${DbSecretArn}"
 echo $SECRET_ARN >> /opt/oe/patterns/wordpress/secret-arn.txt
 
 SECRET_NAME=$(aws secretsmanager list-secrets --query "SecretList[?ARN=='$SECRET_ARN'].Name" --output text)
@@ -177,8 +177,8 @@ echo "export DB_HOST=${DbCluster.Endpoint.Address}" >> /etc/apache2/envvars
 echo "" >> /etc/apache2/envvars
 
 echo "export WP_ENV=${WordPressEnv}" >> /etc/apache2/envvars
-echo "export WP_HOME=https://${WordPressHome}" >> /etc/apache2/envvars
-echo "export WP_SITEURL=https://${WordPressHome}/wp" >> /etc/apache2/envvars
+echo "export WP_HOME=https://${Hostname}" >> /etc/apache2/envvars
+echo "export WP_SITEURL=https://${Hostname}/wp" >> /etc/apache2/envvars
 
 echo "" >> /etc/apache2/envvars
 
@@ -204,4 +204,4 @@ openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -subj '/CN=localhost'
 systemctl enable apache2 && systemctl start apache2
 
-cfn-signal --exit-code $? --stack ${AWS::StackName} --resource AppAsg --region ${AWS::Region}
+cfn-signal --exit-code $? --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}

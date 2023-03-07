@@ -167,6 +167,8 @@ mysql -u $username -P $port -h $host --password=$password wordpress
 EOF
 chmod 755 /usr/local/bin/connect-to-db
 
+
+
 echo "" >> /etc/apache2/envvars
 
 echo "export DB_NAME=wordpress" >> /etc/apache2/envvars
@@ -205,3 +207,30 @@ openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
 systemctl enable apache2 && systemctl start apache2
 
 cfn-signal --exit-code $? --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}
+
+# ses msmtp setup
+aws ssm get-parameter \
+    --name "/aws/reference/secretsmanager/${InstanceSecretName}" \
+    --with-decryption \
+    --query Parameter.Value \
+| jq -r . > /opt/oe/patterns/instance.json
+
+ACCESS_KEY_ID=$(cat /opt/oe/patterns/instance.json | jq -r .access_key_id)
+SECRET_ACCESS_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .secret_access_key)
+SMTP_PASSWORD=$(cat /opt/oe/patterns/instance.json | jq -r .smtp_password)
+
+cat <<EOF > /etc/msmtprc
+defaults
+tls on
+tls_starttls on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+syslog on
+
+account default
+host email-smtp.${AWS::Region}.amazonaws.com
+port 587
+auth on
+user $ACCESS_KEY_ID
+password $SMTP_PASSWORD
+from no-reply@${HostedZoneName}
+EOF

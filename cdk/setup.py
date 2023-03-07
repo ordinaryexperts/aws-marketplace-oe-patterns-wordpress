@@ -7,7 +7,7 @@ CDK_VERSION="2.44.0"
 
 setuptools.setup(
     name="wordpress",
-    version="1.0.0",
+    version="1.3.0",
 
     description="AWS Marketplace Pattern for WordPress by Ordinary Experts.",
     long_description=long_description,
@@ -21,7 +21,7 @@ setuptools.setup(
     install_requires=[
         f"aws-cdk-lib=={CDK_VERSION}",
         f"constructs>=10.0.0,<11.0.0",
-        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@1001021f700437f212975d420a7f8e169eeb003d"
+        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@dd5a87f0db4e7ff0d1cc6c0478c3a68ac9bc7669"
     ],
 
     python_requires=">=3.6",

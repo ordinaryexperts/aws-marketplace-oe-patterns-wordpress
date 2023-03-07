@@ -8,9 +8,10 @@ deploy: build
 	--require-approval never \
 	--parameters AlbCertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e \
 	--parameters AlbIngressCidr=0.0.0.0/0 \
-	--parameters AsgDesiredCapacity=2 \
-	--parameters AsgMaxSize=4 \
-	--parameters AsgMinSize=2 \
+	--parameters AsgDesiredCapacity=1 \
+	--parameters AsgReprovisionString=20230307.1 \
+	--parameters AsgMaxSize=2 \
+	--parameters AsgMinSize=1 \
 	--parameters EfsAutomaticBackupsStatus=ENABLED \
 	--parameters EfsTransitionToIa=AFTER_14_DAYS \
 	--parameters EfsTransitionToPrimaryStorageClass=AFTER_1_ACCESS \

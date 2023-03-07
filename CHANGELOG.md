@@ -1,6 +1,11 @@
 # Unreleased
 
-* Updating documentation for deploying apps
+* New rsync approach for CodeDeploy to minimize downtime
+* Upgrade CDK to 2.44.0
+* Upgrade Aurora MySQL to latest 5.7 version
+* Switch to OE common CDK constructs
+* Latest Debian buster AMI
+* SES SMTP email integration
 
 # 1.3.0
 

@@ -89,7 +89,11 @@ apt-get install -y --no-install-recommends \
     mariadb-client \
     pkg-config \
     re2c \
+    rsync \
     xz-utils
+
+# ses smtp integration
+apt-get install -y msmtp msmtp-mta
 
 APACHE_CONFDIR=/etc/apache2
 APACHE_ENVVARS=$APACHE_CONFDIR/envvars

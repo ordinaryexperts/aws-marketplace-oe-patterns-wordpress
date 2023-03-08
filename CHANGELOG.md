@@ -2,10 +2,12 @@
 
 * New rsync approach for CodeDeploy to minimize downtime
 * Upgrade CDK to 2.44.0
-* Upgrade Aurora MySQL to latest 5.7 version
+* Upgrade MySQL Aurora to 5.7.mysql_aurora.2.11.1
 * Switch to OE common CDK constructs
 * Latest Debian buster AMI
 * SES SMTP email integration
+* Upgrade to PHP 7.4.33
+* Add PHP intl extension
 
 # 1.3.0
 

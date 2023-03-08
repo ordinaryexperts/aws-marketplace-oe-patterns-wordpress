@@ -105,12 +105,7 @@ a2dismod mpm_event && a2enmod mpm_prefork
 
 PHP_EXTRA_BUILD_DEPS=apache2-dev
 
-GPG_KEYS="CBAF69F173A0FEA4B537F470D66C9593118BCCB6 F38252826ACD957EF380D39F2F7956BC5DA04B5D"
-
-PHP_VERSION="7.4.13"
-PHP_URL="https://www.php.net/distributions/php-7.4.13.tar.xz"
-PHP_ASC_URL="https://www.php.net/distributions/php-7.4.13.tar.xz.asc"
-PHP_SHA256="0865cff41e7210de2537bcd5750377cfe09a9312b9b44c1a166cf372d5204b8f"
+PHP_URL="https://www.php.net/distributions/php-7.4.33.tar.xz"
 
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
 mkdir -p /usr/share/man/man1
@@ -164,6 +159,7 @@ fi
 ./configure \
 	--build="$gnuArch" \
 	--enable-ftp \
+    --enable-intl \
 	--enable-mbstring \
 	--enable-mysqlnd \
 	--enable-option-checking=fatal \

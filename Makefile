@@ -9,7 +9,7 @@ deploy: build
 	--parameters AlbCertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e \
 	--parameters AlbIngressCidr=0.0.0.0/0 \
 	--parameters AsgDesiredCapacity=1 \
-	--parameters AsgReprovisionString=20230307.1 \
+	--parameters AsgReprovisionString=20230307.2 \
 	--parameters AsgMaxSize=2 \
 	--parameters AsgMinSize=1 \
 	--parameters EfsAutomaticBackupsStatus=ENABLED \
@@ -20,7 +20,7 @@ deploy: build
 	--parameters DnsHostname=wordpress-${USER}.dev.patterns.ordinaryexperts.com \
 	--parameters DnsRoute53HostedZoneName=dev.patterns.ordinaryexperts.com \
 	--parameters SourceArtifactBucketName=github-user-and-bucket-githubartifactbucket-wl52dae3lyub \
-	--parameters SourceArtifactObjectKey=develop-wordpress.zip \
+	--parameters SourceArtifactObjectKey=wordpress-611.zip \
 	--parameters VpcId=vpc-00425deda4c835455 \
 	--parameters VpcPrivateSubnet1Id=subnet-030c94b9795c6cb96 \
 	--parameters VpcPrivateSubnet2Id=subnet-079290412ce63c4d5 \

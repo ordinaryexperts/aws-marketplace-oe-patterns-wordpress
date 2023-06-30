@@ -38,7 +38,7 @@ from oe_patterns_cdk_common.ses import Ses
 from oe_patterns_cdk_common.util import Util
 from oe_patterns_cdk_common.vpc import Vpc
 
-DEFAULT_WORDPRESS_SOURCE_URL="https://ordinary-experts-aws-marketplace-wordpress-pattern-artifacts.s3.amazonaws.com/aws-marketplace-oe-patterns-wordpress-default/refs/tags/6.1.1.zip"
+DEFAULT_WORDPRESS_SOURCE_URL="https://ordinary-experts-aws-marketplace-wordpress-pattern-artifacts.s3.amazonaws.com/aws-marketplace-oe-patterns-wordpress-default/refs/tags/6.2.2.zip"
 TWO_YEARS_IN_DAYS=731
 if 'TEMPLATE_VERSION' in os.environ:
     template_version = os.environ['TEMPLATE_VERSION']
@@ -434,7 +434,7 @@ class WordPressStack(Stack):
                         value=asg.asg.ref,
                     )
                 ],
-                image="aws/codebuild/standard:4.0",
+                image="aws/codebuild/standard:7.0",
                 type="LINUX_CONTAINER"
             ),
             name="{}-transform".format(Aws.STACK_NAME),

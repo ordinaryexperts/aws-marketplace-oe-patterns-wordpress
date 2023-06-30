@@ -20,7 +20,7 @@ deploy: build
 	--parameters DnsHostname=wordpress-${USER}.dev.patterns.ordinaryexperts.com \
 	--parameters DnsRoute53HostedZoneName=dev.patterns.ordinaryexperts.com \
 	--parameters SourceArtifactBucketName=github-user-and-bucket-githubartifactbucket-wl52dae3lyub \
-	--parameters SourceArtifactObjectKey=wordpress-611.zip \
+	--parameters SourceArtifactObjectKey=wordpress-622.zip \
 	--parameters VpcId=vpc-00425deda4c835455 \
 	--parameters VpcPrivateSubnet1Id=subnet-030c94b9795c6cb96 \
 	--parameters VpcPrivateSubnet2Id=subnet-079290412ce63c4d5 \

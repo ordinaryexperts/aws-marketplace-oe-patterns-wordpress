@@ -44,7 +44,7 @@ We support multiple availability zones using an RDS Aurora MySQL cluster and EC2
 "Operating System Username": "ubuntu"
 "PIOPS Total": ""
 "AWS Services Required": "EC2, VPC, IAM, SNS, CloudFormation, CloudWatch, CodePipeline, CodeDeploy, Lambda, S3, Route 53, Systems Manager"
-"3rd Party Software Included": "Debian packages: see GitHub, AWS CloudFormation utilities, AWS CLI, AWS CloudWatch agent."
+"3rd Party Software Included": "Ubuntu packages: see GitHub, AWS CloudFormation utilities, AWS CLI, AWS CloudWatch agent."
 "Version Title": "{{version}}"
 "Release Notes": "See GitHub project for release notes."
 "Upgrade Instructions": "Re-run the stack to apply new infrastructure changes."

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo 'hi'
+cfn-signal --exit-code $? --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}
+
 # aws cloudwatch
 cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 {
@@ -167,8 +170,6 @@ mysql -u $username -P $port -h $host --password=$password wordpress
 EOF
 chmod 755 /usr/local/bin/connect-to-db
 
-
-
 echo "" >> /etc/apache2/envvars
 
 echo "export DB_NAME=wordpress" >> /etc/apache2/envvars
@@ -204,9 +205,6 @@ openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -keyout /etc/ssl/private/apache-selfsigned.key \
   -out /etc/ssl/certs/apache-selfsigned.crt \
   -subj '/CN=localhost'
-systemctl enable apache2 && systemctl start apache2
-
-cfn-signal --exit-code $? --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}
 
 # ses msmtp setup
 aws ssm get-parameter \
@@ -234,3 +232,5 @@ user $ACCESS_KEY_ID
 password $SMTP_PASSWORD
 from no-reply@${HostedZoneName}
 EOF
+
+systemctl enable apache2 && systemctl start apache2

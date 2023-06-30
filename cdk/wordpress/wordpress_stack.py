@@ -341,10 +341,10 @@ class WordPressStack(Stack):
         asg = Asg(
             self,
             "Asg",
-            default_instance_type = "t3.xlarge",
             deployment_rolling_update = True,
             pipeline_bucket_arn = pipeline_artifact_bucket_arn,
             secret_arns=secret_arns,
+            use_graviton=False,
             user_data_contents=launch_config_user_data,
             user_data_variables = {
                 "WordPressEnv": word_press_env_param.value_as_string,

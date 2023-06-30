@@ -1,8 +1,5 @@
 #!/bin/bash
 
-echo 'hi'
-cfn-signal --exit-code $? --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}
-
 # aws cloudwatch
 cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 {
@@ -234,3 +231,5 @@ from no-reply@${HostedZoneName}
 EOF
 
 systemctl enable apache2 && systemctl start apache2
+
+cfn-signal --exit-code $? --stack ${AWS::StackName} --resource Asg --region ${AWS::Region}

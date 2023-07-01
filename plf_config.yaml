@@ -1,4 +1,5 @@
 ---
+"Product Slug": "wordpress"
 "Product ID": "f3bfa640-c230-4a34-9c4a-91d4a98f9a2e"
 "Product Code": "efhxtk9jnp4yw8654eosytw6m"
 "Accessibility": "Public"
@@ -8,7 +9,7 @@
 "Short Description": "The Ordinary Experts WordPress Bedrock Pattern is a custom AMI + open-source AWS CloudFormation template that provisions a production-ready, CICD-enabled AWS infrastructure solution for deploying WordPress Bedrock."
 "Full Description": "The Ordinary Experts WordPress Bedrock Pattern is an open-source AWS CloudFormation template that offers an easy-to-install AWS infrastructure solution for quickly deploying a WordPress Bedrock project, using both AWS and WordPress best practices.
 
-This template provides a base WordPress Bedrock application or can be used with an existing WordPress Bedrock project. The solution creates a CodePipeline which automatically deploys new changes when an artifact is uploaded to S3. See our example WordPress site for how to bundle your code into S3.
+This template provides a base WordPress 6.2.2 Bedrock application or can be used with an existing WordPress Bedrock project. The solution creates a CodePipeline which automatically deploys new changes when an artifact is uploaded to S3. See our example WordPress site for how to bundle your code into S3.
 
 Automatically configured to support auto-scaling through AWS Autoscaling Groups, this solution leverages an EFS file system to share user generated content between application servers.
 

@@ -1,5 +1,7 @@
 # Unreleased
 
+# 1.4.0
+
 * New rsync approach for CodeDeploy to minimize downtime
 * Upgrade CDK to 2.44.0
 * Upgrade MySQL Aurora to 5.7.mysql_aurora.2.11.1

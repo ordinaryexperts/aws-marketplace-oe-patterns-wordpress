@@ -29,9 +29,8 @@ apt-get install -y --no-install-recommends \
     xz-utils
 
 # ses smtp integration
-# https://marlam.de/msmtp/news/msmtp-permission-denied-disable-apparmor/
-# aa-disable /etc/apparmor.d/usr.bin.msmtp
-# apt-get install -y msmtp msmtp-mta
+echo "msmtp msmtp/apparmor boolean false" | debconf-set-selections
+apt-get install -y msmtp msmtp-mta
 
 apt-get install -y --no-install-recommends apache2
 a2dissite 000-default

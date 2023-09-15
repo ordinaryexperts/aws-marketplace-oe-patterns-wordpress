@@ -1,5 +1,18 @@
 # Unreleased
 
+# 1.4.0
+
+* New rsync approach for CodeDeploy to minimize downtime
+* Upgrade CDK to 2.44.0
+* Upgrade MySQL Aurora to 5.7.mysql_aurora.2.11.1
+* Switch to OE common CDK constructs
+* Switch to Ubuntu 22.04
+* SES SMTP email integration
+* Upgrade to PHP 8.1
+* Upgrade default WP Bedrock install to 6.2.2
+* Smaller default instance sizes
+* Add PHP intl extension
+
 # 1.3.0
 
 * Lifecycle management support for EFS

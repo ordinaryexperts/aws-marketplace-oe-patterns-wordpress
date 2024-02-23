@@ -1,5 +1,11 @@
 # Unreleased
 
+# 1.4.1
+
+* linting cleanup
+* Add additional documentation regarding IAM resources
+* ignore plf*.xlsx
+
 # 1.4.0
 
 * New rsync approach for CodeDeploy to minimize downtime

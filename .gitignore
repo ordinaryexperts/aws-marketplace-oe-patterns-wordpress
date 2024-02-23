@@ -25,3 +25,6 @@ manifest.json
 # shared Makefiles/scripts
 common.mk
 scripts/common/*
+
+# plf
+plf*.xlsx

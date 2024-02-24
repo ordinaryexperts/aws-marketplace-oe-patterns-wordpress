@@ -8,9 +8,12 @@ project:
 tests:
   allResources:
     parameters:
-      CertificateArn: arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e
+      AlbCertificateArn: arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-patterns-wordpress-taskcat-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-2zppaw3wi3sx
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
+      SesCreateDomainIdentity: "false"
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: develop-wordpress.zip
       VpcId: vpc-00425deda4c835455
@@ -18,4 +21,3 @@ tests:
       VpcPrivateSubnet2Id: subnet-079290412ce63c4d5
       VpcPublicSubnet1Id: subnet-0c2f5d4daa1792c8d
       VpcPublicSubnet2Id: subnet-060c39a6ded9e89d7
-      WordPressHostname: "oe-patterns-wordpress-taskcat-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"

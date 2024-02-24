@@ -56,26 +56,18 @@ else:
 AMI_ID="ami-0f1c0bb91a7301da3"
 AMI_NAME="ordinary-experts-patterns-wordpress--20240223-0321"
 generated_ami_ids = {
-    "af-south-1": "",
-    "ap-east-1": "",
     "ap-northeast-1": "ami-02ed22ae965cabba6",
     "ap-northeast-2": "ami-0f1a5e4ac7813b766",
     "ap-northeast-3": "ami-06601e5fbd1cf853f",
     "ap-south-1": "ami-093f11b42bfb3ff7a",
     "ap-southeast-1": "ami-05350e7c719ca451f",
     "ap-southeast-2": "ami-067d7105c661288ca",
-    "ap-southeast-3": "",
     "ca-central-1": "ami-01112f361e566715c",
     "eu-central-1": "ami-08b52ba078b39f432",
-    "eu-central-2": "",
     "eu-north-1": "ami-065376aa3d878c77b",
-    "eu-south-1": "",
-    "eu-south-2": "",
     "eu-west-1": "ami-0e1cb415349681f22",
     "eu-west-2": "ami-030592da8760c2333",
     "eu-west-3": "ami-087f872585c0fef1a",
-    "me-central-1": "",
-    "me-south-1": "",
     "sa-east-1": "ami-0f9b545eaa51606b7",
     "us-east-1": "ami-0f9b545eaa51606b7",
     "us-east-2": "ami-0cdc8f7249ed89bbe",
@@ -99,7 +91,7 @@ class WordPressStack(Stack):
 
         ami_mapping={
             "AMI": {
-                "OEWORDPRESS": AMI_NAME
+                "AMI": AMI_NAME
             }
         }
         for region in generated_ami_ids.keys():
@@ -890,7 +882,7 @@ class WordPressStack(Stack):
             ),
             handler="index.lambda_handler",
             role=initialize_default_wordpress_lambda_function_role.attr_arn,
-            runtime="python3.7",
+            runtime="python3.10",
             timeout=300
         )
         initialize_default_wordpress_lambda_function.cfn_options.condition = initialize_default_wordpress_condition

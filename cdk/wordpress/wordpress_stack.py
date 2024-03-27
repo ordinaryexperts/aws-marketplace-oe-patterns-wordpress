@@ -288,6 +288,7 @@ class WordPressStack(Stack):
         parameter_groups += db_secret.metadata_parameter_group()
         parameter_groups += dns.metadata_parameter_group()
         parameter_groups += efs.metadata_parameter_group()
+        parameter_groups += pipeline.metadata_parameter_group()
         parameter_groups += ses.metadata_parameter_group()
         parameter_groups += vpc.metadata_parameter_group()
 
@@ -309,6 +310,7 @@ class WordPressStack(Stack):
                     **db_secret.metadata_parameter_labels(),
                     **dns.metadata_parameter_labels(),
                     **efs.metadata_parameter_labels(),
+                    **pipeline.metadata_parameter_labels(),
                     **ses.metadata_parameter_labels(),
                     **vpc.metadata_parameter_labels()
                 }

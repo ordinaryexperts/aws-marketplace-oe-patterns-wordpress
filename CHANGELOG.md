@@ -1,5 +1,6 @@
 # Unreleased
 
+* fix region tests
 * fix tests
 * move to AppDeployPipeline construct
 * Upgrade oe-patterns-cdk-common to 3.18.1

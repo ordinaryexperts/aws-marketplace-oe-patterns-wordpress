@@ -14,6 +14,7 @@ tests:
       DnsHostname: "oe-wordpress-us-east-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
       DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-2zppaw3wi3sx
+      SesCreateDomainIdentity: "false" # this may exist in us-east-1 due to ongoing development
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-us-east-1.zip
   allResourcesUsEast2:

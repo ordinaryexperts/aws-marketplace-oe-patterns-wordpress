@@ -9,159 +9,176 @@ tests:
   # region compatibility testing
   allResourcesUsEast1:
     parameters:
-      CertificateArn: arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e
+      AlbCertificateArn: arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-us-east-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-2zppaw3wi3sx
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
+      SesCreateDomainIdentity: "false" # this may exist in us-east-1 due to ongoing development
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-us-east-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-us-east-1.dev.patterns.ordinaryexperts.com
   allResourcesUsEast2:
     parameters:
-      CertificateArn: arn:aws:acm:us-east-2:992593896645:certificate/82228fa4-bbca-4f79-a9be-88eabb19123b
+      AlbCertificateArn: arn:aws:acm:us-east-2:992593896645:certificate/82228fa4-bbca-4f79-a9be-88eabb19123b
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-us-east-2-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-1ez4gpd957ssw
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-us-east-2.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-us-east-2.dev.patterns.ordinaryexperts.com
     regions:
       - us-east-2
   allResourcesUsWest1:
     parameters:
-      CertificateArn: arn:aws:acm:us-west-1:992593896645:certificate/fb436a39-fd93-432a-a8b4-0abec8209d46
+      AlbCertificateArn: arn:aws:acm:us-west-1:992593896645:certificate/fb436a39-fd93-432a-a8b4-0abec8209d46
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-us-west-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-ho6mfquy2i0a
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-us-west-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-us-west-1.dev.patterns.ordinaryexperts.com
     regions:
       - us-west-1
   allResourcesUsWest2:
     parameters:
-      CertificateArn: arn:aws:acm:us-west-2:992593896645:certificate/15bebb23-39f3-40b8-a1b6-7117c0ff1b88
+      AlbCertificateArn: arn:aws:acm:us-west-2:992593896645:certificate/15bebb23-39f3-40b8-a1b6-7117c0ff1b88
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-us-west-2-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-849z7vrx6s8y
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-us-west-2.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-us-west-2.dev.patterns.ordinaryexperts.com
     regions:
       - us-west-2
   allResourcesCaCentral1:
     parameters:
-      CertificateArn: arn:aws:acm:us-west-2:992593896645:certificate/e94d1a87-91d0-4fb8-89e1-dcaee6f420fd
+      AlbCertificateArn: arn:aws:acm:ca-central-1:992593896645:certificate/a890c24c-c66c-4a14-86d3-d6d521f285cd
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-ca-central-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-ohedywzh1qgz
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-ca-central-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-ca-central-1.dev.patterns.ordinaryexperts.com
     regions:
       - ca-central-1
   allResourcesEuCentral1:
     parameters:
-      CertificateArn: arn:aws:acm:eu-central-1:992593896645:certificate/f42f5e11-98eb-4e13-8cb6-ee21b94bc2e2
+      AlbCertificateArn: arn:aws:acm:eu-central-1:992593896645:certificate/f42f5e11-98eb-4e13-8cb6-ee21b94bc2e2
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-eu-central-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-cpmt9o7e3kcr
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-eu-central-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-eu-central-1.dev.patterns.ordinaryexperts.com
     regions:
       - eu-central-1
   allResourcesEuNorth1:
     parameters:
-      CertificateArn: arn:aws:acm:eu-north-1:992593896645:certificate/b3f816e0-8ab6-4662-9bef-ca9730430e2d
+      AlbCertificateArn: arn:aws:acm:eu-north-1:992593896645:certificate/b3f816e0-8ab6-4662-9bef-ca9730430e2d
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-eu-north-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-gt8objaro78o
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-eu-north-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-eu-north-1.dev.patterns.ordinaryexperts.com
     regions:
       - eu-north-1
   allResourcesEuWest1:
     parameters:
-      CertificateArn: arn:aws:acm:eu-west-1:992593896645:certificate/eee15512-781d-424b-8af6-627b6982fbf3
+      AlbCertificateArn: arn:aws:acm:eu-west-1:992593896645:certificate/eee15512-781d-424b-8af6-627b6982fbf3
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-eu-west-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-k6hn1bp3o927
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-eu-west-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-eu-west-1.dev.patterns.ordinaryexperts.com
     regions:
       - eu-west-1
   allResourcesEuWest2:
     parameters:
-      CertificateArn: arn:aws:acm:eu-west-2:992593896645:certificate/59f5aca7-2dac-4d2e-b7fc-ae6f75c7f17d
+      AlbCertificateArn: arn:aws:acm:eu-west-2:992593896645:certificate/59f5aca7-2dac-4d2e-b7fc-ae6f75c7f17d
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-eu-west-2-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-1umlk8cxcn2z5
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-eu-west-2.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-eu-west-2.dev.patterns.ordinaryexperts.com
     regions:
       - eu-west-2
   allResourcesEuWest3:
     parameters:
-      CertificateArn: arn:aws:acm:eu-west-3:992593896645:certificate/e7e51b38-5b7a-4e4d-a778-8933a7397df1
+      AlbCertificateArn: arn:aws:acm:eu-west-3:992593896645:certificate/e7e51b38-5b7a-4e4d-a778-8933a7397df1
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-eu-west-3-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-1ie5iy4dcl6my
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-eu-west-3.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-eu-west-3.dev.patterns.ordinaryexperts.com
     regions:
       - eu-west-3
   allResourcesApNorthEast1:
     parameters:
-      CertificateArn: arn:aws:acm:ap-northeast-1:992593896645:certificate/bb73d612-9864-4be2-b55c-ef82bd055ee3
+      AlbCertificateArn: arn:aws:acm:ap-northeast-1:992593896645:certificate/bb73d612-9864-4be2-b55c-ef82bd055ee3
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-ap-northeast-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-2e12fa5839m7
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-ap-northeast-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-ap-northeast-1.dev.patterns.ordinaryexperts.com
     regions:
       - ap-northeast-1
   allResourcesApSouth1:
     parameters:
-      CertificateArn: arn:aws:acm:ap-south-1:992593896645:certificate/b6ce224d-ced0-4201-b9f4-d69da4f4f974
+      AlbCertificateArn: arn:aws:acm:ap-south-1:992593896645:certificate/b6ce224d-ced0-4201-b9f4-d69da4f4f974
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-ap-south-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-2x5mkltu15nc
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-ap-south-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-ap-south-1.dev.patterns.ordinaryexperts.com
     regions:
       - ap-south-1
   allResourcesApSouthEast1:
     parameters:
-      CertificateArn: arn:aws:acm:ap-southeast-1:992593896645:certificate/afd6028c-56ba-46cb-bf9a-0313c8b3a41d
+      AlbCertificateArn: arn:aws:acm:ap-southeast-1:992593896645:certificate/afd6028c-56ba-46cb-bf9a-0313c8b3a41d
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-ap-southeast-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-1tf0mq31uhu6s
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-ap-southeast-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-ap-southeast-1.dev.patterns.ordinaryexperts.com
     regions:
       - ap-southeast-1
   allResourcesApSouthEast2:
     parameters:
-      CertificateArn: arn:aws:acm:ap-southeast-2:992593896645:certificate/abf93f93-7088-47d1-86a9-939d244f8c9b
+      AlbCertificateArn: arn:aws:acm:ap-southeast-2:992593896645:certificate/abf93f93-7088-47d1-86a9-939d244f8c9b
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-ap-southeast-2-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-1fnshkw6aa7a0
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-ap-southeast-2.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-ap-southeast-2.dev.patterns.ordinaryexperts.com
     regions:
       - ap-southeast-2
   allResourcesApNortheast2:
     parameters:
-      CertificateArn: arn:aws:acm:ap-northeast-2:992593896645:certificate/dd0502f9-57ff-4e25-8022-9f77617c576a
+      AlbCertificateArn: arn:aws:acm:ap-northeast-2:992593896645:certificate/dd0502f9-57ff-4e25-8022-9f77617c576a
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-ap-northeast-2-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-1sgwwc6ser06h
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-ap-northeast-2.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-ap-northeast-2.dev.patterns.ordinaryexperts.com
     regions:
       - ap-northeast-2
   allResourcesSaEast1:
     parameters:
-      CertificateArn: arn:aws:acm:sa-east-1:992593896645:certificate/16226f92-0c19-466b-9ef1-821b2f6635e7
+      AlbCertificateArn: arn:aws:acm:sa-east-1:992593896645:certificate/16226f92-0c19-466b-9ef1-821b2f6635e7
+      AlbIngressCidr: 0.0.0.0/0
+      DnsHostname: "oe-wordpress-sa-east-1-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
+      DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-ph0macusrupc
-      Route53HostedZoneName: dev.patterns.ordinaryexperts.com
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: wordpress-sa-east-1.zip
-      WordPressHostname: oe-patterns-wordpress-taskcat-sa-east-1.dev.patterns.ordinaryexperts.com
     regions:
       - sa-east-1

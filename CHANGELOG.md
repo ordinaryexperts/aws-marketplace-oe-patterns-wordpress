@@ -4,7 +4,7 @@
 
 * fix region tests
 * fix tests
-* Upgrade oe-patterns-cdk-common to 3.20.0
+* Upgrade oe-patterns-cdk-common to 3.20.2
 * Upgrade MySQL Aurora database to 8.0 *causes downtime during deployment*
 * Upgrade OE devenv to 2.5.3 *updates pricing*
 * Use stock WordPress instead of Bedrock - moved Bedrock to new pattern

@@ -128,13 +128,6 @@ EOF
 systemctl enable amazon-cloudwatch-agent
 systemctl start amazon-cloudwatch-agent
 
-# efs
-mkdir /mnt/efs
-mount -t efs "${AppEfs}":/ /mnt/efs
-echo "${AppEfs}:/ /mnt/efs efs _netdev 0 0" >> /etc/fstab
-mkdir -p /mnt/efs/wordpress/uploads
-chown www-data /mnt/efs/wordpress/uploads
-
 mkdir -p /opt/oe/patterns/wordpress
 
 # secretsmanager
@@ -154,6 +147,146 @@ aws ssm get-parameter \
 jq -n --arg host "${DbCluster.Endpoint.Address}" --arg port "${DbCluster.Endpoint.Port}" \
    '{host: $host, port: $port}' > /opt/oe/patterns/wordpress/db.json
 
+# efs
+mkdir /mnt/efs
+echo "${AppEfs}:/ /mnt/efs efs _netdev 0 0" >> /etc/fstab
+mount -a
+
+# initialize wordpress copy
+if [ ! -f /mnt/efs/wordpress/wp-config.php ]; then
+  cp -a /root/wordpress /mnt/efs
+  echo "Files copied and symlink created."
+fi
+ln -s /mnt/efs/wordpress /var/www/wordpress
+
+DB_USER=$(jq -r '.username' /opt/oe/patterns/wordpress/secret.json)
+DB_PASSWORD=$(jq -r '.password' /opt/oe/patterns/wordpress/secret.json)
+DB_HOST=$(jq -r '.host' /opt/oe/patterns/wordpress/db.json)
+DB_PORT=$(jq -r '.port' /opt/oe/patterns/wordpress/db.json)
+
+PREFIX="${Prefix}"
+get_secret() {
+    KEY="${!PREFIX}_$1"
+    VALUE=$(aws secretsmanager get-secret-value --secret-id "$KEY" | jq -r '.SecretString | fromjson | .value')
+    echo "$VALUE"
+}
+AUTH_KEY=$(get_secret "AUTH_KEY")
+SECURE_AUTH_KEY=$(get_secret "SECURE_AUTH_KEY")
+LOGGED_IN_KEY=$(get_secret "LOGGED_IN_KEY")
+NONCE_KEY=$(get_secret "NONCE_KEY")
+AUTH_SALT=$(get_secret "AUTH_SALT")
+SECURE_AUTH_SALT=$(get_secret "SECURE_AUTH_SALT")
+LOGGED_IN_SALT=$(get_secret "LOGGED_IN_SALT")
+NONCE_SALT=$(get_secret "NONCE_SALT")
+
+if [ ! -f /var/www/wordpress/wp-config.php ]; then
+  cat <<EOF > /var/www/wordpress/wp-config.php
+<?php
+/**
+ * The base configuration for WordPress
+ *
+ * The wp-config.php creation script uses this file during the installation.
+ * You don't have to use the website, you can copy this file to "wp-config.php"
+ * and fill in the values.
+ *
+ * This file contains the following configurations:
+ *
+ * * Database settings
+ * * Secret keys
+ * * Database table prefix
+ * * ABSPATH
+ *
+ * @link https://developer.wordpress.org/advanced-administration/wordpress/wp-config/
+ *
+ * @package WordPress
+ */
+
+// ** Database settings - You can get this info from your web host ** //
+/** The name of the database for WordPress */
+define( 'DB_NAME', 'wordpress' );
+
+/** Database username */
+define( 'DB_USER', '$DB_USER' );
+
+/** Database password */
+define( 'DB_PASSWORD', '$DB_PASSWORD' );
+
+/** Database hostname */
+define( 'DB_HOST', '$DB_HOST' );
+
+/** Database charset to use in creating database tables. */
+define( 'DB_CHARSET', 'utf8' );
+
+/** The database collate type. Don't change this if in doubt. */
+define( 'DB_COLLATE', '' );
+
+/**#@+
+ * Authentication unique keys and salts.
+ *
+ * Change these to different unique phrases! You can generate these using
+ * the {@link https://api.wordpress.org/secret-key/1.1/salt/ WordPress.org secret-key service}.
+ *
+ * You can change these at any point in time to invalidate all existing cookies.
+ * This will force all users to have to log in again.
+ *
+ * @since 2.6.0
+ */
+define( 'AUTH_KEY',         '$AUTH_KEY' );
+define( 'SECURE_AUTH_KEY',  '$SECURE_AUTH_KEY' );
+define( 'LOGGED_IN_KEY',    '$LOGGED_IN_KEY' );
+define( 'NONCE_KEY',        '$NONCE_KEY' );
+define( 'AUTH_SALT',        '$AUTH_SALT' );
+define( 'SECURE_AUTH_SALT', '$SECURE_AUTH_SALT' );
+define( 'LOGGED_IN_SALT',   '$LOGGED_IN_SALT' );
+define( 'NONCE_SALT',       '$NONCE_SALT' );
+
+/**#@-*/
+
+/**
+ * WordPress database table prefix.
+ *
+ * You can have multiple installations in one database if you give each
+ * a unique prefix. Only numbers, letters, and underscores please!
+ */
+\$table_prefix = 'wp_';
+
+/**
+ * For developers: WordPress debugging mode.
+ *
+ * Change this to true to enable the display of notices during development.
+ * It is strongly recommended that plugin and theme developers use WP_DEBUG
+ * in their development environments.
+ *
+ * For information on other constants that can be used for debugging,
+ * visit the documentation.
+ *
+ * @link https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/
+ */
+define( 'WP_DEBUG', false );
+
+/* Add any custom values between this line and the "stop editing" line. */
+
+
+
+/* That's all, stop editing! Happy publishing. */
+
+/** Absolute path to the WordPress directory. */
+if ( ! defined( 'ABSPATH' ) ) {
+        define( 'ABSPATH', __DIR__ . '/' );
+}
+
+/** Sets up WordPress vars and included files. */
+require_once ABSPATH . 'wp-settings.php';
+EOF
+
+fi
+
+# permissions
+# https://stackoverflow.com/a/23755604
+chown -R www-data:www-data /mnt/efs/wordpress
+find /mnt/efs/wordpress -type d -exec chmod 755 {} \;
+find /mnt/efs/wordpress -type f -exec chmod 644 {} \;
+
 # db connect helper
 cat <<'EOF' > /usr/local/bin/connect-to-db
 #!/usr/bin/env bash
@@ -166,36 +299,6 @@ password=`jq -r '.password' /opt/oe/patterns/wordpress/secret.json`
 mysql -u $username -P $port -h $host --password=$password wordpress
 EOF
 chmod 755 /usr/local/bin/connect-to-db
-
-echo "" >> /etc/apache2/envvars
-
-echo "export DB_NAME=wordpress" >> /etc/apache2/envvars
-echo "export DB_USER=`jq -r '.username' /opt/oe/patterns/wordpress/secret.json`" >> /etc/apache2/envvars
-echo "export DB_PASSWORD=`jq -r '.password' /opt/oe/patterns/wordpress/secret.json`" >> /etc/apache2/envvars
-echo "export DB_HOST=${DbCluster.Endpoint.Address}" >> /etc/apache2/envvars
-
-echo "" >> /etc/apache2/envvars
-
-echo "export WP_ENV=${WordPressEnv}" >> /etc/apache2/envvars
-echo "export WP_HOME=https://${Hostname}" >> /etc/apache2/envvars
-echo "export WP_SITEURL=https://${Hostname}/wp" >> /etc/apache2/envvars
-
-echo "" >> /etc/apache2/envvars
-
-PREFIX="${Prefix}"
-function write_apache_env() {
-    KEY="${!PREFIX}_$1"
-    VALUE=`aws secretsmanager get-secret-value --secret-id $KEY | jq '.SecretString | fromjson | .value' | sed "s/\"/'/g"`
-    echo "export $1=$VALUE" >> /etc/apache2/envvars
-}
-write_apache_env "AUTH_KEY"
-write_apache_env "AUTH_SALT"
-write_apache_env "LOGGED_IN_KEY"
-write_apache_env "LOGGED_IN_SALT"
-write_apache_env "NONCE_KEY"
-write_apache_env "NONCE_SALT"
-write_apache_env "SECURE_AUTH_KEY"
-write_apache_env "SECURE_AUTH_SALT"
 
 # apache
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \

@@ -4,11 +4,11 @@
 
 * fix region tests
 * fix tests
-* move to AppDeployPipeline construct
 * Upgrade oe-patterns-cdk-common to 3.20.0
 * Upgrade MySQL Aurora database to 8.0 *causes downtime during deployment*
 * Upgrade OE devenv to 2.5.3 *updates pricing*
-* Upgrade default WP Bedrock install to 6.5.5
+* Use stock WordPress instead of Bedrock - moved Bedrock to new pattern
+* Use WordPress 6.6.1
 
 # 1.4.1
 

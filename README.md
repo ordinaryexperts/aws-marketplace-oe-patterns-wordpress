@@ -64,7 +64,7 @@ Then, configure an SFTP client with:
 
 ## Stack Infrastructure
 
-![Topology Diagram](docs/oe-wordpress-diagram-2.0.0.drawio.png)
+![Topology Diagram](docs/oe-wordpress-diagram-2.0.0.png)
 
 ## Developer Setup
 

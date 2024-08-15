@@ -128,10 +128,27 @@ EOF
 systemctl enable amazon-cloudwatch-agent
 systemctl start amazon-cloudwatch-agent
 
+/root/check-secrets.py ${AWS::Region} ${SecretArn}
+
 mkdir -p /opt/oe/patterns/wordpress
+aws ssm get-parameter \
+    --name "/aws/reference/secretsmanager/${InstanceSecretName}" \
+    --with-decryption \
+    --query Parameter.Value \
+| jq -r . > /opt/oe/patterns/instance.json
+
+ACCESS_KEY_ID=$(cat /opt/oe/patterns/instance.json | jq -r .access_key_id)
+SECRET_ACCESS_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .secret_access_key)
+SMTP_PASSWORD=$(cat /opt/oe/patterns/instance.json | jq -r .smtp_password)
+
+aws ssm get-parameter \
+    --name "/aws/reference/secretsmanager/${InstanceSecretName}" \
+    --with-decryption \
+    --query Parameter.Value \
+| jq -r . > /opt/oe/patterns/instance.json
 
 # secretsmanager
-SECRET_ARN="${DbSecretArn}"
+SECRET_ARN="${SecretArn}"
 echo $SECRET_ARN >> /opt/oe/patterns/wordpress/secret-arn.txt
 
 SECRET_NAME=$(aws secretsmanager list-secrets --query "SecretList[?ARN=='$SECRET_ARN'].Name" --output text)
@@ -142,6 +159,18 @@ aws ssm get-parameter \
     --with-decryption \
     --query Parameter.Value \
 | jq -r . >> /opt/oe/patterns/wordpress/secret.json
+
+DB_SECRET_ARN="${DbSecretArn}"
+echo $DB_SECRET_ARN >> /opt/oe/patterns/wordpress/db-secret-arn.txt
+
+DB_SECRET_NAME=$(aws secretsmanager list-secrets --query "SecretList[?ARN=='$DB_SECRET_ARN'].Name" --output text)
+echo $DB_SECRET_NAME >> /opt/oe/patterns/wordpress/db-secret-name.txt
+
+aws ssm get-parameter \
+    --name "/aws/reference/secretsmanager/$DB_SECRET_NAME" \
+    --with-decryption \
+    --query Parameter.Value \
+| jq -r . >> /opt/oe/patterns/wordpress/db-secret.json
 
 # database values
 jq -n --arg host "${DbCluster.Endpoint.Address}" --arg port "${DbCluster.Endpoint.Port}" \
@@ -159,35 +188,34 @@ if [ ! -f /mnt/efs/wordpress/wp-config.php ]; then
 fi
 ln -s /mnt/efs/wordpress /var/www/wordpress
 
-DB_USER=$(jq -r '.username' /opt/oe/patterns/wordpress/secret.json)
-DB_PASSWORD=$(jq -r '.password' /opt/oe/patterns/wordpress/secret.json)
+DB_USER=$(jq -r '.username' /opt/oe/patterns/wordpress/db-secret.json)
+DB_PASSWORD=$(jq -r '.password' /opt/oe/patterns/wordpress/db-secret.json)
 DB_HOST=$(jq -r '.host' /opt/oe/patterns/wordpress/db.json)
 DB_PORT=$(jq -r '.port' /opt/oe/patterns/wordpress/db.json)
 
-PREFIX="${Prefix}"
-get_secret() {
-    KEY="${!PREFIX}_$1"
-    VALUE=$(aws secretsmanager get-secret-value --secret-id "$KEY" | jq -r '.SecretString | fromjson | .value')
-    echo "$VALUE"
-}
-AUTH_KEY=$(get_secret "AUTH_KEY")
-SECURE_AUTH_KEY=$(get_secret "SECURE_AUTH_KEY")
-LOGGED_IN_KEY=$(get_secret "LOGGED_IN_KEY")
-NONCE_KEY=$(get_secret "NONCE_KEY")
-AUTH_SALT=$(get_secret "AUTH_SALT")
-SECURE_AUTH_SALT=$(get_secret "SECURE_AUTH_SALT")
-LOGGED_IN_SALT=$(get_secret "LOGGED_IN_SALT")
-NONCE_SALT=$(get_secret "NONCE_SALT")
+AUTH_KEY=$(jq -r '.AUTH_KEY' /opt/oe/patterns/wordpress/secret.json)
+SECURE_AUTH_KEY=$(jq -r '.SECURE_AUTH_KEY' /opt/oe/patterns/wordpress/secret.json)
+LOGGED_IN_KEY=$(jq -r '.LOGGED_IN_KEY' /opt/oe/patterns/wordpress/secret.json)
+NONCE_KEY=$(jq -r '.NONCE_KEY' /opt/oe/patterns/wordpress/secret.json)
+AUTH_SALT=$(jq -r '.AUTH_SALT' /opt/oe/patterns/wordpress/secret.json)
+SECURE_AUTH_SALT=$(jq -r '.SECURE_AUTH_SALT' /opt/oe/patterns/wordpress/secret.json)
+LOGGED_IN_SALT=$(jq -r '.LOGGED_IN_SALT' /opt/oe/patterns/wordpress/secret.json)
+NONCE_SALT=$(jq -r '.NONCE_SALT' /opt/oe/patterns/wordpress/secret.json)
 
-if [ ! -f /var/www/wordpress/wp-config.php ]; then
-  cat <<EOF > /var/www/wordpress/wp-config.php
+# custom config
+CUSTOM_CONFIG="// no custom config defined"
+if [[ "${CustomWpConfigParameterArn}" != "" ]]; then
+    CUSTOM_CONFIG_TITLE="// custom config fetched from ${CustomWpConfigParameterArn}"
+    CUSTOM_CONFIG_VALUE=$(aws ssm get-parameter --name "${CustomWpConfigParameterArn}" --with-decryption --output text --query Parameter.Value)
+    CUSTOM_CONFIG=$(printf "%s\n\n%s" "$CUSTOM_CONFIG_TITLE" "$CUSTOM_CONFIG_VALUE")
+fi
+
+cat <<EOF > /var/www/wordpress/wp-config.php
 <?php
 /**
  * The base configuration for WordPress
  *
- * The wp-config.php creation script uses this file during the installation.
- * You don't have to use the website, you can copy this file to "wp-config.php"
- * and fill in the values.
+ * IMPORTANT: This file is automatically regenerated at first instance boot.
  *
  * This file contains the following configurations:
  *
@@ -201,7 +229,7 @@ if [ ! -f /var/www/wordpress/wp-config.php ]; then
  * @package WordPress
  */
 
-// ** Database settings - You can get this info from your web host ** //
+// ** Database settings ** //
 /** The name of the database for WordPress */
 define( 'DB_NAME', 'wordpress' );
 
@@ -250,23 +278,9 @@ define( 'NONCE_SALT',       '$NONCE_SALT' );
  */
 \$table_prefix = 'wp_';
 
-/**
- * For developers: WordPress debugging mode.
- *
- * Change this to true to enable the display of notices during development.
- * It is strongly recommended that plugin and theme developers use WP_DEBUG
- * in their development environments.
- *
- * For information on other constants that can be used for debugging,
- * visit the documentation.
- *
- * @link https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/
- */
-define( 'WP_DEBUG', false );
-
 /* Add any custom values between this line and the "stop editing" line. */
 
-
+$CUSTOM_CONFIG
 
 /* That's all, stop editing! Happy publishing. */
 
@@ -278,8 +292,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Sets up WordPress vars and included files. */
 require_once ABSPATH . 'wp-settings.php';
 EOF
-
-fi
 
 # permissions
 # https://stackoverflow.com/a/23755604
@@ -293,8 +305,8 @@ cat <<'EOF' > /usr/local/bin/connect-to-db
 
 host=`jq -r '.host' /opt/oe/patterns/wordpress/db.json`
 port=`jq -r '.port' /opt/oe/patterns/wordpress/db.json`
-username=`jq -r '.username' /opt/oe/patterns/wordpress/secret.json`
-password=`jq -r '.password' /opt/oe/patterns/wordpress/secret.json`
+username=`jq -r '.username' /opt/oe/patterns/wordpress/db-secret.json`
+password=`jq -r '.password' /opt/oe/patterns/wordpress/db-secret.json`
 
 mysql -u $username -P $port -h $host --password=$password wordpress
 EOF
@@ -306,17 +318,8 @@ openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -out /etc/ssl/certs/apache-selfsigned.crt \
   -subj '/CN=localhost'
 
+
 # ses msmtp setup
-aws ssm get-parameter \
-    --name "/aws/reference/secretsmanager/${InstanceSecretName}" \
-    --with-decryption \
-    --query Parameter.Value \
-| jq -r . > /opt/oe/patterns/instance.json
-
-ACCESS_KEY_ID=$(cat /opt/oe/patterns/instance.json | jq -r .access_key_id)
-SECRET_ACCESS_KEY=$(cat /opt/oe/patterns/instance.json | jq -r .secret_access_key)
-SMTP_PASSWORD=$(cat /opt/oe/patterns/instance.json | jq -r .smtp_password)
-
 cat <<EOF > /etc/msmtprc
 defaults
 tls on

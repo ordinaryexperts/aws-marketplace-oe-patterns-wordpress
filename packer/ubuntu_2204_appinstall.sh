@@ -82,6 +82,59 @@ curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -
 chmod 755 /tmp/wp-cli.phar
 mv /tmp/wp-cli.phar /usr/local/bin/wp
 
+pip install boto3
+cat <<EOF > /root/check-secrets.py
+#!/usr/bin/env python3
+
+import boto3
+import json
+import subprocess
+import sys
+import uuid
+
+region_name = sys.argv[1]
+arn = sys.argv[2]
+
+client = boto3.client("secretsmanager", region_name=region_name)
+response = client.get_secret_value(
+  SecretId=arn
+)
+current_secret = json.loads(response["SecretString"])
+needs_update = False
+
+if 'password' in current_secret:
+    needs_update = True
+    del current_secret['password']
+if 'username' in current_secret:
+    needs_update = True
+    del current_secret['username']
+NEEDED_SECRETS_WITH_SIMILAR_REQUIREMENTS = [
+    "AUTH_KEY",
+    "SECURE_AUTH_KEY",
+    "LOGGED_IN_KEY",
+    "NONCE_KEY",
+    "AUTH_SALT",
+    "SECURE_AUTH_SALT",
+    "LOGGED_IN_SALT",
+    "NONCE_SALT"
+]
+for secret in NEEDED_SECRETS_WITH_SIMILAR_REQUIREMENTS:
+  if not secret in current_secret:
+    needs_update = True
+    cmd = "random_value=\$(seed=\$(date +%s%N); tr -dc '[:alnum:]' < /dev/urandom | head -c 32; echo \$seed | sha256sum | awk '{print substr(\$1, 1, 32)}'); echo \$random_value"
+    output = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True).stdout.decode('utf-8').strip()
+    current_secret[secret] = output
+if needs_update:
+  client.update_secret(
+    SecretId=arn,
+    SecretString=json.dumps(current_secret)
+  )
+else:
+  print('Secrets already generated - no action needed.')
+EOF
+chown root:root /root/check-secrets.py
+chmod 744 /root/check-secrets.py
+
 cat <<EOF > /etc/apache2/sites-available/wordpress.conf
 LogFormat "{\"time\":\"%{%Y-%m-%d}tT%{%T}t.%{msec_frac}tZ\", \"process\":\"%D\", \"filename\":\"%f\", \"remoteIP\":\"%a\", \"host\":\"%V\", \"request\":\"%U\", \"query\":\"%q\", \"method\":\"%m\", \"status\":\"%>s\", \"userAgent\":\"%{User-agent}i\", \"referer\":\"%{Referer}i\"}" cloudwatch
 ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"process\":\"[pid%P]\", \"message\":\"%M\"}"

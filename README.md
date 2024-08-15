@@ -8,8 +8,6 @@ The Ordinary Experts WordPress Pattern is an open-source AWS CloudFormation temp
 
 ## Product Setup
 
-*Prework*
-
 For this pattern to work, you must first:
 
 1. Have an AWS Route 53 Hosted Zone configured in your account
@@ -71,6 +69,8 @@ Then, configure an SFTP client with:
 We are following the [3 Musketeers](https://3musketeers.io/) pattern for project layout / setup.
 
 First, install [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/), and [Make](https://www.gnu.org/software/make/).
+
+Then run `make update-common` to fetch the shared Make commands. Inspect the `Makefile` and `common.mk` files to see additional commands.
 
 ## Feedback
 

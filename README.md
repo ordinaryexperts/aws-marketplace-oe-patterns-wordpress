@@ -31,9 +31,9 @@ Direct access to the EC2 instance for maintenance and customizations is possible
 
 ### wp-config.php Customization
 
-In order to add custom values to the wp-config.php file, create an SSM Parameter of type Secure String. Enter the value of the PHP code to be inserted into wp-config.php into the value of the SSM Parameter. Then include the ARN of the SSM Parameter as the CustomWpConfigParameterArn CloudFormation parameter.
+In order to add custom values to the wp-config.php file, create an SSM Parameter of type Secure String. Enter the value of the PHP code to be inserted into wp-config.php into the value of the SSM Parameter. Then include the ARN of the SSM Parameter as the `CustomWpConfigParameterArn` CloudFormation parameter.
 
-In order for changes in the SSM Parameter value to be deployed to the WordPress site, update the AsgReprovisionString value to any different value (for example, today's date), and update the CloudFormation stack. This will cause the EC2 instance to be reprovisioned, which will fetch the latest configuration from the specified SSM Parameter.
+In order for changes in the SSM Parameter value to be deployed to the WordPress site, update the `AsgReprovisionString` value to any different value (for example, today's date), and update the CloudFormation stack. This will cause the EC2 instance to be reprovisioned, which will fetch the latest configuration from the specified SSM Parameter.
 
 ### SFTP Access
 
@@ -64,7 +64,7 @@ Then, configure an SFTP client with:
 
 ## Stack Infrastructure
 
-![Topology Diagram](https://ordinaryexperts.com/img/products/wordpress-pattern/wordpress-architecture-diagram.png)
+![Topology Diagram](docs/oe-wordpress-diagram-2.0.0.drawio.png)
 
 ## Developer Setup
 

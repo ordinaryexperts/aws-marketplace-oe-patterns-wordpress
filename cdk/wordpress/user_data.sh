@@ -210,7 +210,13 @@ if [[ "${CustomWpConfigParameterArn}" != "" ]]; then
     CUSTOM_CONFIG=$(printf "%s\n\n%s" "$CUSTOM_CONFIG_TITLE" "$CUSTOM_CONFIG_VALUE")
 fi
 
-cat <<EOF > /var/www/wordpress/wp-config.php
+WP_CONFIG_FILE="/var/www/wordpress/wp-config.php"
+
+if [ -f "$WP_CONFIG_FILE" ]; then
+  # wp-config.php exists, replace the custom config block
+  sed -i "/\/\* START: OE PATTERN CUSTOM CONFIG FROM PARAMETER STORE \*/,/\/\* END: OE PATTERN CUSTOM CONFIG FROM PARAMETER STORE \*/c\/* START: OE PATTERN CUSTOM CONFIG FROM PARAMETER STORE */\n$CUSTOM_CONFIG\n/* END: OE PATTERN CUSTOM CONFIG FROM PARAMETER STORE */" "$WP_CONFIG_FILE"
+else
+  cat <<EOF > "$WP_CONFIG_FILE"
 <?php
 /**
  * The base configuration for WordPress
@@ -278,9 +284,13 @@ define( 'NONCE_SALT',       '$NONCE_SALT' );
  */
 \$table_prefix = 'wp_';
 
+/* START: OE PATTERN CUSTOM CONFIG FROM PARAMETER STORE */
+$CUSTOM_CONFIG
+/* END: OE PATTERN CUSTOM CONFIG FROM PARAMETER STORE */
+
 /* Add any custom values between this line and the "stop editing" line. */
 
-$CUSTOM_CONFIG
+
 
 /* That's all, stop editing! Happy publishing. */
 
@@ -292,6 +302,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Sets up WordPress vars and included files. */
 require_once ABSPATH . 'wp-settings.php';
 EOF
+fi
 
 # permissions
 # https://stackoverflow.com/a/23755604

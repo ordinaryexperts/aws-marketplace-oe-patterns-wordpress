@@ -3,9 +3,11 @@ import subprocess
 from aws_cdk import (
     Aws,
     aws_iam,
+    CfnCondition,
     CfnMapping,
     CfnParameter,
     CfnOutput,
+    Fn,
     Stack
 )
 from constructs import Construct
@@ -82,6 +84,15 @@ class WordPressStack(Stack):
         )
 
         #
+        # CONDITIONS
+        #
+        self.custom_wp_config_parameter_arn_condition = CfnCondition(
+            self,
+            "CustomWpConfigParameterArnCondition",
+            expression=Fn.condition_not(Fn.condition_equals(self.custom_wp_config_parameter_arn_param.value, ""))
+        )
+
+        #
         # RESOURCES
         #
 
@@ -93,7 +104,7 @@ class WordPressStack(Stack):
 
         dns = Dns(self, "Dns")
 
-        secret = Secret(self, "Config")
+        secret = Secret(self, "WordPress")
 
         asg_update_secret_policy = aws_iam.CfnRole.PolicyProperty(
             policy_document=aws_iam.PolicyDocument(
@@ -110,6 +121,21 @@ class WordPressStack(Stack):
                 ]
             ),
             policy_name="AllowUpdateInstanceSecret"
+        )
+
+        asg_read_ssm_parameter_policy = aws_iam.CfnRole.PolicyProperty(
+            policy_document=aws_iam.PolicyDocument(
+                statements=[
+                    aws_iam.PolicyStatement(
+                        effect=aws_iam.Effect.ALLOW,
+                        actions=[
+                            "ssm:GetParameter"
+                        ],
+                        resources=["ARN_PLACEHOLDER"]
+                    )
+                ]
+            ),
+            policy_name="AllowReadSsmParameter"
         )
 
         ses = Ses(
@@ -137,7 +163,7 @@ class WordPressStack(Stack):
         asg = Asg(
             self,
             "Asg",
-            additional_iam_role_policies=[asg_update_secret_policy],
+            additional_iam_role_policies=[asg_update_secret_policy, asg_read_ssm_parameter_policy],
             deployment_rolling_update = True,
             secret_arns=[db_secret.secret_arn(), ses.secret_arn()],
             use_graviton=False,
@@ -156,6 +182,32 @@ class WordPressStack(Stack):
         asg.asg.node.add_dependency(db.db_primary_instance)
         asg.asg.node.add_dependency(ses.generate_smtp_password_custom_resource)
 
+        # update this policy via overrides bc CDK doesn't like wrapping it in an Fn::If
+        asg.iam_instance_role.add_property_override(
+            f"Policies.5",
+            {
+                "Fn::If": [
+                    "CustomWpConfigParameterArnCondition",
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": "ssm:GetParameter",
+                                    "Effect": "Allow",
+                                    "Resource": {
+                                        "Ref": "CustomWpConfigParameterArn"
+                                    }
+                                }
+                            ],
+                            "Version": "2012-10-17"
+                        },
+                        "PolicyName": "AllowReadParameterStoreConfig"
+                    },
+                    { "Ref": "AWS::NoValue" }
+                ]
+            }
+        )
+
         Util.add_sg_ingress(db, asg.sg)
 
         # efs
@@ -172,13 +224,23 @@ class WordPressStack(Stack):
             value="Click on the DnsSiteUrlOutput link and follow the instructions for installing the WordPress site."
         )
 
-        parameter_groups = []
+        parameter_groups = [
+            {
+                "Label": {
+                    "default": "Advanced WordPress Config"
+                },
+                "Parameters": [
+                    self.custom_wp_config_parameter_arn_param.logical_id
+                ]
+            }
+        ]
         parameter_groups += alb.metadata_parameter_group()
         parameter_groups += asg.metadata_parameter_group()
         parameter_groups += db.metadata_parameter_group()
         parameter_groups += db_secret.metadata_parameter_group()
-        parameter_groups += efs.metadata_parameter_group()
         parameter_groups += dns.metadata_parameter_group()
+        parameter_groups += efs.metadata_parameter_group()
+        parameter_groups += secret.metadata_parameter_group()
         parameter_groups += ses.metadata_parameter_group()
         parameter_groups += vpc.metadata_parameter_group()
 
@@ -188,12 +250,16 @@ class WordPressStack(Stack):
             "AWS::CloudFormation::Interface": {
                 "ParameterGroups": parameter_groups,
                 "ParameterLabels": {
+                    self.custom_wp_config_parameter_arn_param.logical_id: {
+                        "default": "Custom wp-config.php SSM Parameter ARN"
+                    },
                     **alb.metadata_parameter_labels(),
                     **asg.metadata_parameter_labels(),
                     **db.metadata_parameter_labels(),
                     **db_secret.metadata_parameter_labels(),
                     **dns.metadata_parameter_labels(),
                     **efs.metadata_parameter_labels(),
+                    **secret.metadata_parameter_labels(),
                     **ses.metadata_parameter_labels(),
                     **vpc.metadata_parameter_labels()
                 }

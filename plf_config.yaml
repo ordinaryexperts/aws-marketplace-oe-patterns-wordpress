@@ -5,30 +5,28 @@
 "Accessibility": "Public"
 "SKU": "OE_PATTERNS_WORDPRESS"
 "Software by": "Ordinary Experts"
-"Title": "Ordinary Experts WordPress Bedrock Pattern"
-"Short Description": "The Ordinary Experts WordPress Bedrock Pattern is a custom AMI + open-source AWS CloudFormation template that provisions a production-ready, CICD-enabled AWS infrastructure solution for deploying WordPress Bedrock."
-"Full Description": "The Ordinary Experts WordPress Bedrock Pattern is an open-source AWS CloudFormation template that offers an easy-to-install AWS infrastructure solution for quickly deploying a WordPress Bedrock project, using both AWS and WordPress best practices.
+"Title": "Ordinary Experts WordPress Pattern"
+"Short Description": "The Ordinary Experts WordPress Pattern is a custom AMI + open-source AWS CloudFormation template that provisions a production-ready AWS infrastructure solution for deploying WordPress."
+"Full Description": "The Ordinary Experts WordPress Pattern is an open-source AWS CloudFormation template that offers an easy-to-install AWS infrastructure solution for quickly deploying a WordPress website, using both AWS and WordPress best practices.
 
-This template provides a base WordPress 6.2.2 Bedrock application or can be used with an existing WordPress Bedrock project. The solution creates a CodePipeline which automatically deploys new changes when an artifact is uploaded to S3. See our example WordPress site for how to bundle your code into S3.
+Automatically configured to support auto-scaling through AWS Auto Scaling Groups, this solution leverages an EFS file system to share user generated content and application files between application servers, and SES for sending emails.
 
-Automatically configured to support auto-scaling through AWS Autoscaling Groups, this solution leverages an EFS file system to share user generated content between application servers.
-
-The template ensure multi-level security by incorporating AWS IAM for federated access to resources with least privilege and AWS managed keys and Secret Manager to manage secrets for encryption of data at rest and in transit.
+The template ensures multi-level security by incorporating AWS IAM for federated access to resources with least privilege and AWS managed keys and Secret Manager to manage secrets for encryption of data at rest and in transit.
 
 We support multiple availability zones using an RDS Aurora MySQL cluster and EC2 Auto Scaling Groups."
-"Highlight1": "Production-ready CICD enabled WordPress Bedrock site."
+"Highlight1": "Production-ready 6.6.1 WordPress site."
 "Highlight2": "Integrated with AWS Certificate Manager for HTTPS support."
-"Highlight3": "Logs in CloudWatch Logs, Remote access via Session Manager."
+"Highlight3": "Logs in CloudWatch Logs, Remote SSH/SFTP via Session Manager."
 "Product Category1": "Application Stacks"
 "Product Category2": "Application Development"
 "Product Category3": "Content Management"
-"Search Keywords": "wordpress, bedrock, cms, open source"
+"Search Keywords": "wordpress, cms, open source"
 "Resource1_Name": "Ordinary Experts Product Page"
 "Resource1_URL": "https://ordinaryexperts.com/products/wordpress-pattern/"
 "Resource2_Name": "Github Source Code and Documentation"
 "Resource2_URL": "https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-wordpress/tree/main"
-"Resource3_Name": "WordPress Bedrock Homepage"
-"Resource3_URL": "https://roots.io/bedrock/"
+"Resource3_Name": "WordPress Homepage"
+"Resource3_URL": "https://wordpress.org"
 "Image URL": "https://ordinaryexperts.com/img/products/wordpress-pattern/wordpress-product-logo.png"
 "Product Video": ""
 "Support Offered": "TRUE"
@@ -44,12 +42,12 @@ We support multiple availability zones using an RDS Aurora MySQL cluster and EC2
 "Operating System Version": "22.04"
 "Operating System Username": "ubuntu"
 "PIOPS Total": ""
-"AWS Services Required": "EC2, VPC, IAM, SNS, CloudFormation, CloudWatch, CodePipeline, CodeDeploy, Lambda, S3, Route 53, Systems Manager"
+"AWS Services Required": "EC2, VPC, IAM, SES, CloudFormation, CloudWatch, Lambda, S3, Route 53, Systems Manager, Secrets Manager"
 "3rd Party Software Included": "Ubuntu packages: see GitHub, AWS CloudFormation utilities, AWS CLI, AWS CloudWatch agent."
 "Version Title": "{{version}}"
 "Release Notes": "See GitHub project for release notes."
 "Upgrade Instructions": "Re-run the stack to apply new infrastructure changes."
-"Product Access Instructions": "Run the stack. After Stack Completion, see CloudFormation Outputs for the URL of the provisioned WordPress site. To access the application servers, find the EC2 instance in the AWS console and \"Connect\" using the Session Manager option. All information gathered by the WordPress application is stored either on encrypted EFS volumes or in its encrypted Aurora database. To monitor for the health of the application, check the ALB Health Dashboard. Several IAM resources are provisioned as part of this product: InstanceUser IAM user - used to generate an Access Key (InstanceUserAccessKey) for SMTP email sending via SES. GenerateSMTPPasswordLambdaRole IAM role - used by Lambda to generate SMTP password based on InstanceUserAccessKey and store in Secrets Manager. AsgInstanceRole IAM role - attached to EC2 instance and allows for sending logs to CloudWatch as well as downloading artifacts from S3. CodeBuildTransformServiceRole IAM role - used by CodeBuild to add CodeDeploy artifacts to WordPress build during deplyment. PipelineRole IAM role - role used by CodePipeline for deploying new application updates. SourceStageRole IAM role - used by CodePipeline to fetch the source from source s3 bucket . DeployStageRole IAM role - used by CodePipeline to deploy trigger CodeDeploy of new application deployments. CodeDeployRole IAM role - used by CodeDeploy to deploy application deployments onto instance. InitializeDefaultWordPressLambdaFunctionRole IAM role - used by lambda function which can initialize the environment with a default WordPress artifact. InstanceUserCreateSecretPolicy IAM policy - used by lambda function for generating SMTP password from InstanceUserAccessKey. For network configuration, please reference the architecture diagram. For a pricing breakdown, please reference the AWS Calculator link. For more detailed instructions, see the GitHub project."
+"Product Access Instructions": "Run the stack. After Stack Completion, see CloudFormation Outputs for the URL of the provisioned WordPress site. To access the application servers, find the EC2 instance in the AWS console and \"Connect\" using the Session Manager option. All information gathered by the WordPress application is stored either on encrypted EFS volumes or in its encrypted Aurora database. To monitor for the health of the application, check the ALB Health Dashboard. Several IAM resources are provisioned as part of this product: SesInstanceUser IAM user - used to generate an Access Key (SesInstanceUserAccessKey) for SMTP email sending via SES. SesGenerateSMTPPasswordLambdaRole IAM role - used by Lambda to generate SMTP password based on InstanceUserAccessKey and store in Secrets Manager. AsgInstanceRole IAM role - attached to EC2 instance and allows for sending logs to CloudWatch as well as accessing Secrets Manager and Parameter Store. SesInstanceUserCreateSecretPolicy IAM policy - used by lambda function for generating SMTP password from SesInstanceUserAccessKey. For network configuration, please reference the architecture diagram. For a pricing breakdown, please reference the AWS Calculator link. For more detailed instructions, see the GitHub project."
 "Endpoint URL Protocol": "https"
 "Endpoint URL Port": "443"
 "Endpoint URL Relative URL": ""
@@ -157,16 +155,14 @@ We support multiple availability zones using an RDS Aurora MySQL cluster and EC2
 "FCP Dimension24 Name": ""
 "FCP Dimension24 Description": ""
 "FCP Dimension24 Rate": ""
-"Clusters and AWS Resources Topology 1: Title": "Ordinary Experts WordPress Bedrock Pattern"
-"Clusters and AWS Resources Topology 1: AWS Calculator Link": "https://calculator.aws/#/estimate?id=035fd24f9bf0bcccd5298d023ed423ce9725a1a5"
-"Clusters and AWS Resources Topology 1: Short Description": "The Ordinary Experts WordPress Bedrock Pattern is a custom AMI + open-source AWS CloudFormation template that provisions a production-ready, CICD-enabled AWS infrastructure solution for deploying WordPress Bedrock."
-"Clusters and AWS Resources Topology 1: Long Description": "The Ordinary Experts WordPress Bedrock Pattern is an open-source AWS CloudFormation template that offers an easy-to-install AWS infrastructure solution for quickly deploying a WordPress Bedrock project, using both AWS and WordPress best practices.
+"Clusters and AWS Resources Topology 1: Title": "Ordinary Experts WordPress Pattern"
+"Clusters and AWS Resources Topology 1: AWS Calculator Link": "https://calculator.aws/#/estimate?id=61da8316c6a59300c03431de96891a77423db3b1"
+"Clusters and AWS Resources Topology 1: Short Description": "The Ordinary Experts WordPress Pattern is a custom AMI + open-source AWS CloudFormation template that provisions a production-ready AWS infrastructure solution for deploying WordPress."
+"Clusters and AWS Resources Topology 1: Long Description": "The Ordinary Experts WordPress Pattern is an open-source AWS CloudFormation template that offers an easy-to-install AWS infrastructure solution for quickly deploying a WordPress project, using both AWS and WordPress best practices.
 
-This template provides a base WordPress Bedrock application or can be used with an existing WordPress Bedrock project. The solution creates a CodePipeline which automatically deploys new changes when an artifact is uploaded to S3. See our example WordPress site for how to bundle your code into S3.
+Automatically configured to support auto-scaling through AWS Auto Scaling Groups, this solution leverages an EFS file system to share user generated content and application files between application servers.
 
-Automatically configured to support auto-scaling through AWS Autoscaling Groups, this solution leverages an EFS file system to share user generated content between application servers.
-
-The template ensure multi-level security by incorporating AWS IAM for federated access to resources with least privilege and AWS managed keys and Secret Manager to manage secrets for encryption of data at rest and in transit.
+The template ensures multi-level security by incorporating AWS IAM for federated access to resources with least privilege and AWS managed keys and Secret Manager to manage secrets for encryption of data at rest and in transit.
 
 We support multiple availability zones using an RDS Aurora MySQL cluster and EC2 Auto Scaling Groups."
 "Clusters and AWS Resources Topology 1: CloudFormation Template URL": "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/wordpress/{{version}}/template.yaml"

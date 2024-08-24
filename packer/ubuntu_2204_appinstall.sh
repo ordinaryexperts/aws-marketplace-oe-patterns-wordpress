@@ -1,13 +1,13 @@
 #!/bin/bash -eux
 
-SCRIPT_VERSION=1.3.0
+SCRIPT_VERSION=1.5.0
 SCRIPT_PREINSTALL=ubuntu_2004_2204_preinstall.sh
 SCRIPT_POSTINSTALL=ubuntu_2004_2204_postinstall.sh
 
 # preinstall steps
 curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_PREINSTALL"
 chmod +x $SCRIPT_PREINSTALL
-./$SCRIPT_PREINSTALL --install-code-deploy-agent --install-efs-utils
+./$SCRIPT_PREINSTALL --install-efs-utils
 rm $SCRIPT_PREINSTALL
 
 # start WordPress specific stuff
@@ -37,15 +37,8 @@ a2dissite 000-default
 rm -rvf /var/www/html
 a2dismod mpm_event && a2enmod mpm_prefork
 
-apt-get install -y libapache2-mod-php php-curl php-intl php-mysql php-xml php-zip
+apt-get install -y libapache2-mod-php php-curl php-intl php-mysql php-xml php-zip php-mbstring
 apt-get install -y php-imagick php-memcache php-uploadprogress
-
-# mcrypt
-# printf "\n" | pecl install mcrypt-1.0.4
-# echo "extension=mcrypt.so" > $PHP_INI_DIR/conf.d/mcrypt.ini
-
-# echo "zend_extension=opcache" > $PHP_INI_DIR/conf.d/opcache.ini
-# echo "extension=sodium" > $PHP_INI_DIR/conf.d/sodium.ini
 
 cat <<EOF > /etc/php/8.1/apache2/conf.d/opcache-recommended.ini
 opcache.memory_consumption=128
@@ -71,10 +64,76 @@ EOF
 a2enmod rewrite
 a2enmod ssl
 
+# download WordPress
+curl https://wordpress.org/wordpress-6.6.1.zip -o /root/wordpress-6.6.1.zip
+unzip /root/wordpress-6.6.1.zip -d /root
+# remove unused plugins
+rm /root/wordpress/wp-content/plugins/hello.php
+rm -rf /root/wordpress/wp-content/plugins/akismet
+# remove unused themes
+rm -rf /root/wordpress/wp-content/themes/twentytwentytwo
+rm -rf /root/wordpress/wp-content/themes/twentytwentythree
+# upgrade folder
+mkdir -p /root/wordpress/wp-content/upgrade
+chown -R www-data:www-data /root/wordpress
+
 # wp-cli
 curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /tmp/wp-cli.phar
 chmod 755 /tmp/wp-cli.phar
 mv /tmp/wp-cli.phar /usr/local/bin/wp
+
+pip install boto3
+cat <<EOF > /root/check-secrets.py
+#!/usr/bin/env python3
+
+import boto3
+import json
+import subprocess
+import sys
+import uuid
+
+region_name = sys.argv[1]
+arn = sys.argv[2]
+
+client = boto3.client("secretsmanager", region_name=region_name)
+response = client.get_secret_value(
+  SecretId=arn
+)
+current_secret = json.loads(response["SecretString"])
+needs_update = False
+
+if 'password' in current_secret:
+    needs_update = True
+    del current_secret['password']
+if 'username' in current_secret:
+    needs_update = True
+    del current_secret['username']
+NEEDED_SECRETS_WITH_SIMILAR_REQUIREMENTS = [
+    "AUTH_KEY",
+    "SECURE_AUTH_KEY",
+    "LOGGED_IN_KEY",
+    "NONCE_KEY",
+    "AUTH_SALT",
+    "SECURE_AUTH_SALT",
+    "LOGGED_IN_SALT",
+    "NONCE_SALT"
+]
+for secret in NEEDED_SECRETS_WITH_SIMILAR_REQUIREMENTS:
+  if not secret in current_secret:
+    needs_update = True
+    cmd = "random_value=\$(seed=\$(date +%s%N); tr -dc '[:alnum:]' < /dev/urandom | head -c 32; echo \$seed | sha256sum | awk '{print substr(\$1, 1, 32)}'); echo \$random_value"
+    output = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True).stdout.decode('utf-8').strip()
+    current_secret[secret] = output
+if needs_update:
+  client.update_secret(
+    SecretId=arn,
+    SecretString=json.dumps(current_secret)
+  )
+else:
+  print('Secrets already generated - no action needed.')
+EOF
+chown root:root /root/check-secrets.py
+chmod 744 /root/check-secrets.py
 
 cat <<EOF > /etc/apache2/sites-available/wordpress.conf
 LogFormat "{\"time\":\"%{%Y-%m-%d}tT%{%T}t.%{msec_frac}tZ\", \"process\":\"%D\", \"filename\":\"%f\", \"remoteIP\":\"%a\", \"host\":\"%V\", \"request\":\"%U\", \"query\":\"%q\", \"method\":\"%m\", \"status\":\"%>s\", \"userAgent\":\"%{User-agent}i\", \"referer\":\"%{Referer}i\"}" cloudwatch
@@ -82,7 +141,7 @@ ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"proce
 
 <VirtualHost *:80>
         ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/app/bedrock/web
+        DocumentRoot /var/www/wordpress
 
         LogLevel warn
         ErrorLog /var/log/apache2/error.log
@@ -91,7 +150,7 @@ ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"proce
         RewriteEngine On
         RewriteOptions Inherit
 
-        <Directory /var/www/app/bedrock/web>
+        <Directory /var/www/wordpress>
             Options -Indexes
             AllowOverride All
             Require all granted
@@ -114,7 +173,7 @@ ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"proce
 </VirtualHost>
 <VirtualHost *:443>
         ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/app/bedrock/web
+        DocumentRoot /var/www/wordpress
 
         LogLevel warn
         ErrorLog /var/log/apache2/error-ssl.log
@@ -123,7 +182,7 @@ ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"proce
         RewriteEngine On
         RewriteOptions Inherit
 
-        <Directory /var/www/app/bedrock/web>
+        <Directory /var/www/wordpress>
             Options -Indexes
             AllowOverride All
             Require all granted

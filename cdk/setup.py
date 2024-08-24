@@ -3,11 +3,11 @@ import setuptools
 with open("README.md") as fp:
     long_description = fp.read()
 
-CDK_VERSION="2.44.0"
+CDK_VERSION="2.120.0"
 
 setuptools.setup(
     name="wordpress",
-    version="1.3.0",
+    version="2.0.0",
 
     description="AWS Marketplace Pattern for WordPress by Ordinary Experts.",
     long_description=long_description,
@@ -21,10 +21,10 @@ setuptools.setup(
     install_requires=[
         f"aws-cdk-lib=={CDK_VERSION}",
         f"constructs>=10.0.0,<11.0.0",
-        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@3.15.0"
+        f"oe-patterns-cdk-common@git+https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-cdk-common@3.20.3"
     ],
 
-    python_requires=">=3.6",
+    python_requires=">=3.8",
 
     classifiers=[
         "Development Status :: 4 - Beta",

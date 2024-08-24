@@ -1,86 +1,76 @@
 ![Ordinary Experts Logo](https://ordinaryexperts.com/img/logo.png)
 
-# WordPress Bedrock on AWS Pattern
+# WordPress on AWS Pattern
 
-The Ordinary Experts WordPress Bedrock Pattern is an open-source AWS CloudFormation template + custom AMI that offers an easy-to-install AWS infrastructure solution for quickly deploying a WordPress site, using the Bedrock project structure.
+The Ordinary Experts WordPress Pattern is an open-source AWS CloudFormation template + custom AMI that offers an easy-to-install AWS infrastructure solution for quickly deploying a WordPress site.
 
 * [WordPress](https://wordpress.org/) is open source software you can use to create a beautiful website, blog, or app.
-* [Bedrock](https://roots.io/bedrock/) is WordPress boilerplate with modern development tools, easier configuration, and an improved folder structure
 
 ## Product Setup
 
-*Prework*
-
 For this pattern to work, you must first:
 
-1. Have an AWS Certificate Manager certificate provisioned
+1. Have an AWS Route 53 Hosted Zone configured in your account
+1. Have an AWS Certificate Manager certificate provisioned for the desired hostname
 
 After that you can just launch the CloudFormation stack and fill out the required parameters.
 
-## Deploying new versions of your WordPress site
-
-To deploy new versions or an existing app you will need to zip up your site and push it to the S3 Bucket and Path referenced by the SourceArtifactBucketName and SourceArtifactObjectKey parameters. If you don't specify a value for SourceArtifactBucketName a new bucket will be created for you and the default value for SourceArtifactObjectKey is wordpress.zip.
-
-You can also look at our example and demo WordPress sites and their github actions, as they bundle the app in the appropriate way for this pattern:
-
-https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-wordpress-demo-site/blob/main/.github/workflows/main.yml
-
-https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-wordpress-default/blob/develop/.github/workflows/main.yml
-
 ## Technical Details
 
-* Debian 10 (Buster)
+* Ubuntu 22.04
 * Apache 2.4
-* PHP 7.4
+* PHP 8.1
 
-The AWS stack uses Amazon Elastic Compute Cloud (Amazon EC2), Amazon Virtual Public Cloud (Amazon VPC), Amazon Aurora, Amazon Elastic File System (Amazon EFS), Amazon Simple Storage System (Amazon S3), AWS CodePipeline, AWS CodeBuild, AWS CodeDeploy, AWS Systems Manager, and Amazon Secrets Manager.
+The AWS stack uses Amazon Elastic Compute Cloud (Amazon EC2), Amazon Virtual Public Cloud (Amazon VPC), Amazon Aurora, Amazon Elastic File System (Amazon EFS), Amazon Simple Email Service (Amazon SES), AWS Systems Manager, and Amazon Secrets Manager.
 
-Automatically configured to support auto-scaling through AWS Autoscaling Groups, this solution leverages an EFS file system to share user generated content between application servers. Additionally, our solution includes a CodePipeline which actively monitors a deployment location on AWS S3 making continuous integration and deployment throughout your infrastructure easy.
+Automatically configured to support auto-scaling through AWS Autoscaling Groups, this solution leverages an EFS file system to share user generated content between application servers.
 
 Direct access to the EC2 instance for maintenance and customizations is possible through AWS Systems Manager Agent which is running as a service on the instance. For access, locate the EC2 instance in the AWS console dashboard, select it and click the "Connect" button, selecting the "Session Manager" option.
 
-Regions supported by Ordinary Experts' stack:
+### wp-config.php Customization
 
-Supported:
+In order to add custom values to the wp-config.php file, create an SSM Parameter of type Secure String. Enter the value of the PHP code to be inserted into wp-config.php into the value of the SSM Parameter. Then include the ARN of the SSM Parameter as the `CustomWpConfigParameterArn` CloudFormation parameter.
 
-* ap-northeast-1 (Tokyo)
-* ap-northeast-2 (Seoul)
-* ap-south-1 (Mumbai)
-* ap-southeast-1 (Singapore)
-* ap-southeast-2 (Sydney)
-* ca-central-1 (Central)
-* eu-central-1 (Frankfurt)
-* eu-north-1 (Stockholm)
-* eu-west-1 (Ireland)
-* eu-west-2 (London)
-* eu-west-3 (Paris)
-* sa-east-1 (Sao Paolo)
-* us-east-1 (N. Virginia)
-* us-east-2 (Ohio)
-* us-west-1 (N. California)
-* us-west-2 (Oregon)
+In order for changes in the SSM Parameter value to be deployed to the WordPress site, update the `AsgReprovisionString` value to any different value (for example, today's date), and update the CloudFormation stack. This will cause the EC2 instance to be reprovisioned, which will fetch the latest configuration from the specified SSM Parameter.
 
-Not Supported:
+### SFTP Access
 
-* af-south-1 (Cape Town)
-* ap-east-1 (Hong Kong)
-* eu-south-1 (Milan)
-* me-south-1 (Bahrain)
+In order to transfer files between a local workstation and the EC2 instance, similar to an SFTP experience, the AWS Systems Manager can be used to forward the SFTP traffic from the EC2 instance to a local computer.
 
-Optional configurations include the following:
+For this to work, the stack must be configured to use the AsgKeyName parameter to specify an AWS Key Pair that can be used when connecting to the instance.
 
-* Contain your infrastructure in a new VPC, or provide this CloudFormation stack with an existing VPC id and subnets.
-* Manage DNS automatically by supplying an AWS Route 53 Hosted Zone to the stack.
+To do so, first find the instance id from the AWS console for the WordPress server.
+
+Then, from the computer that should connect to the instance, run the following:
+
+```
+aws ssm start-session \
+  --target i-xxxxxxxxxxxxxxxx \
+  --document-name AWS-StartPortForwardingSession \
+  --parameters '{"portNumber":["22"],"localPortNumber":["2222"]}'
+```
+
+Replace 'i-xxxxxxxxxxxxxxxx' with the instance id from the console.
+
+Then, configure an SFTP client with:
+
+* Protocol: SFTP
+* Hostname: 127.0.0.1
+* Port: 2222
+* Username: ubuntu
+* Auth Method: Public Key - select the PEM file from the Key Pair indicated in the AsgKeyName parameter
 
 ## Stack Infrastructure
 
-![Topology Diagram](https://ordinaryexperts.com/img/products/wordpress-pattern/wordpress-architecture-diagram.png)
+![Topology Diagram](docs/oe-wordpress-diagram-2.0.0.png)
 
 ## Developer Setup
 
 We are following the [3 Musketeers](https://3musketeers.io/) pattern for project layout / setup.
 
 First, install [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/), and [Make](https://www.gnu.org/software/make/).
+
+Then run `make update-common` to fetch the shared Make commands. Inspect the `Makefile` and `common.mk` files to see additional commands.
 
 ## Feedback
 

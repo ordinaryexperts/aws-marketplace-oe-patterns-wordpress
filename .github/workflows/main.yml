@@ -9,7 +9,7 @@ on:
 
 jobs:
   taskcat:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -28,3 +28,15 @@ jobs:
         with:
           name: taskcat_outputs
           path: test/main-test/taskcat_outputs/
+      - name: clean snapshots
+        if: always()
+        run: make clean-snapshots-tcat
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OE_PATTERNS_TASKCAT_DEV_GITHUB_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OE_PATTERNS_TASKCAT_DEV_GITHUB_AWS_SECRET_ACCESS_KEY }}
+      - name: clean logs
+        if: always()
+        run: make clean-logs-tcat
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OE_PATTERNS_TASKCAT_DEV_GITHUB_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OE_PATTERNS_TASKCAT_DEV_GITHUB_AWS_SECRET_ACCESS_KEY }}

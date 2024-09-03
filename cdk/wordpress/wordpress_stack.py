@@ -196,9 +196,7 @@ class WordPressStack(Stack):
                 "CustomWpConfigParameterArn": self.custom_wp_config_parameter_arn_param.value_as_string,
                 "DbSecretArn": db_secret.secret_arn(),
                 "HostedZoneName": dns.route_53_hosted_zone_name_param.value_as_string,
-                "Hostname": dns.hostname(),
                 "InstanceSecretName": Aws.STACK_NAME + "/instance/credentials",
-                "Prefix": "{}/wordpress/secret".format(Aws.STACK_NAME),
                 "SecretArn": secret.secret_arn()
             },
             vpc=vpc

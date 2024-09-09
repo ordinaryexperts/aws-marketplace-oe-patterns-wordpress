@@ -1,10 +1,10 @@
 -include common.mk
 
 update-common:
-	wget -O common.mk https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/1.3.0/common.mk
+	wget -O common.mk https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/1.5.1/common.mk
 
 deploy: build
-	docker-compose run -w /code/cdk --rm devenv cdk deploy \
+	docker compose run -w /code/cdk --rm devenv cdk deploy \
 	--require-approval never \
 	--parameters AlbCertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e \
 	--parameters AlbIngressCidr=0.0.0.0/0 \

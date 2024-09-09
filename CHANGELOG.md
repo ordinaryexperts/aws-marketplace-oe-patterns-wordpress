@@ -1,6 +1,7 @@
 # Unreleased
 
 * Fix tests again
+* Upgrade to Docker Compose V2
 
 # 2.0.0
 

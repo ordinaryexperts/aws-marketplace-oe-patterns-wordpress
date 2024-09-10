@@ -1,5 +1,6 @@
 # Unreleased
 
+* Fix loopback errors when restricting ALB CIDR
 * Fix tests again
 * Upgrade to Docker Compose V2
 

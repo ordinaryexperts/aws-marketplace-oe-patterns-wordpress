@@ -327,8 +327,9 @@ chmod 755 /usr/local/bin/connect-to-db
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -keyout /etc/ssl/private/apache-selfsigned.key \
   -out /etc/ssl/certs/apache-selfsigned.crt \
-  -subj '/CN=localhost'
-
+  -subj '/CN=${DnsHostname}'
+cp /etc/ssl/certs/apache-selfsigned.crt /usr/local/share/ca-certificates/
+update-ca-certificates
 
 # ses msmtp setup
 cat <<EOF > /etc/msmtprc
@@ -346,6 +347,11 @@ user $ACCESS_KEY_ID
 password $SMTP_PASSWORD
 from no-reply@${HostedZoneName}
 EOF
+
+HOST_ENTRY="${DnsHostname}"
+if ! grep -q "127.0.0.1.*$HOST_ENTRY" /etc/hosts; then
+    sed -i "/127.0.0.1/s/$/ $HOST_ENTRY/" /etc/hosts
+fi
 
 systemctl enable apache2 && systemctl start apache2
 

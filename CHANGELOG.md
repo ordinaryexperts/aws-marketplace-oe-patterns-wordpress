@@ -1,5 +1,7 @@
 # Unreleased
 
+* Upgrade to WordPress 6.6.2
+* Require DNS Parameters
 * Fix loopback errors when restricting ALB CIDR
 * Fix tests again
 * Upgrade to Docker Compose V2

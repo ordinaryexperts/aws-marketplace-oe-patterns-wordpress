@@ -64,9 +64,11 @@ EOF
 a2enmod rewrite
 a2enmod ssl
 
+WORDPRESS_VERSION=6.6.2
+
 # download WordPress
-curl https://wordpress.org/wordpress-6.6.1.zip -o /root/wordpress-6.6.1.zip
-unzip /root/wordpress-6.6.1.zip -d /root
+curl https://wordpress.org/wordpress-$WORDPRESS_VERSION.zip -o /root/wordpress-$WORDPRESS_VERSION.zip
+unzip /root/wordpress-$WORDPRESS_VERSION.zip -d /root
 # remove unused plugins
 rm /root/wordpress/wp-content/plugins/hello.php
 rm -rf /root/wordpress/wp-content/plugins/akismet

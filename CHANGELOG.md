@@ -1,5 +1,6 @@
 # Unreleased
 
+* Use v4 of upload-artifact github action
 * Upgrade to WordPress 6.6.2
 * Require DNS Parameters
 * Fix loopback errors when restricting ALB CIDR

@@ -324,10 +324,11 @@ EOF
 chmod 755 /usr/local/bin/connect-to-db
 
 # apache
+DNS_HOSTNAME_TRUNCATED=$(echo "${DnsHostname}" | cut -c1-64)
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -keyout /etc/ssl/private/apache-selfsigned.key \
   -out /etc/ssl/certs/apache-selfsigned.crt \
-  -subj '/CN=${DnsHostname}'
+  -subj '/CN=$DNS_HOSTNAME_TRUNCATED'
 cp /etc/ssl/certs/apache-selfsigned.crt /usr/local/share/ca-certificates/
 update-ca-certificates
 

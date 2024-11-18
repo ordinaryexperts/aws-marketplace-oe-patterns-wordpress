@@ -1,7 +1,7 @@
 -include common.mk
 
 update-common:
-	wget -O common.mk https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/1.5.1/common.mk
+	wget -O common.mk https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/1.6.0/common.mk
 
 deploy: build
 	docker compose run -w /code/cdk --rm devenv cdk deploy \

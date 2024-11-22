@@ -1,8 +1,8 @@
 #!/bin/bash -eux
 
-SCRIPT_VERSION=1.5.0
-SCRIPT_PREINSTALL=ubuntu_2004_2204_preinstall.sh
-SCRIPT_POSTINSTALL=ubuntu_2004_2204_postinstall.sh
+SCRIPT_VERSION=1.6.0
+SCRIPT_PREINSTALL=ubuntu_2204_2404_preinstall.sh
+SCRIPT_POSTINSTALL=ubuntu_2204_2404_postinstall.sh
 
 # preinstall steps
 curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_PREINSTALL"
@@ -64,7 +64,7 @@ EOF
 a2enmod rewrite
 a2enmod ssl
 
-WORDPRESS_VERSION=6.6.2
+WORDPRESS_VERSION=6.7
 
 # download WordPress
 curl https://wordpress.org/wordpress-$WORDPRESS_VERSION.zip -o /root/wordpress-$WORDPRESS_VERSION.zip
@@ -73,8 +73,8 @@ unzip /root/wordpress-$WORDPRESS_VERSION.zip -d /root
 rm /root/wordpress/wp-content/plugins/hello.php
 rm -rf /root/wordpress/wp-content/plugins/akismet
 # remove unused themes
-rm -rf /root/wordpress/wp-content/themes/twentytwentytwo
 rm -rf /root/wordpress/wp-content/themes/twentytwentythree
+rm -rf /root/wordpress/wp-content/themes/twentytwentyfour
 # upgrade folder
 mkdir -p /root/wordpress/wp-content/upgrade
 chown -R www-data:www-data /root/wordpress

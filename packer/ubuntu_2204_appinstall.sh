@@ -64,7 +64,7 @@ EOF
 a2enmod rewrite
 a2enmod ssl
 
-WORDPRESS_VERSION=6.7
+WORDPRESS_VERSION=6.7.1
 
 # download WordPress
 curl https://wordpress.org/wordpress-$WORDPRESS_VERSION.zip -o /root/wordpress-$WORDPRESS_VERSION.zip

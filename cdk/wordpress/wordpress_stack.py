@@ -302,6 +302,12 @@ class WordPressStack(Stack):
             "SftpTargetGroup",
             port=22,
             protocol="TCP",
+            target_group_attributes=[
+                aws_elasticloadbalancingv2.CfnTargetGroup.TargetGroupAttributeProperty(
+                    key='deregistration_delay.timeout_seconds',
+                    value='10'
+                )
+            ],
             target_type="instance",
             vpc_id=vpc.id()
         )
@@ -352,7 +358,7 @@ class WordPressStack(Stack):
                 },
                 "Parameters": [
                     self.custom_wp_config_parameter_arn_param.logical_id,
-                    self.enable_sftp_param_param.logical_id,
+                    self.enable_sftp_param.logical_id,
                     self.sftp_ingress_cidr_param.logical_id
                 ]
             }

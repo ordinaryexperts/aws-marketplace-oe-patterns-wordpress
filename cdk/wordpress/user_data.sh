@@ -184,9 +184,11 @@ mount -a
 # initialize wordpress copy
 if [ ! -f /mnt/efs/wordpress/wp-config.php ]; then
   cp -a /root/wordpress /mnt/efs
-  echo "Files copied and symlink created."
+  echo "Initial WordPress files copied..."
 fi
+rm -f /var/www/wordpress
 ln -s /mnt/efs/wordpress /var/www/wordpress
+echo "WordPress symlink created."
 
 DB_USER=$(jq -r '.username' /opt/oe/patterns/wordpress/db-secret.json)
 DB_PASSWORD=$(jq -r '.password' /opt/oe/patterns/wordpress/db-secret.json)
@@ -304,11 +306,20 @@ require_once ABSPATH . 'wp-settings.php';
 EOF
 fi
 
-# permissions
-# https://stackoverflow.com/a/23755604
+# configure sftp key
+cp /home/ubuntu/.ssh/authorized_keys /home/wordpress/.ssh/
+chmod 600 /home/wordpress/.ssh/authorized_keys
+chown wordpress:wordpress /home/wordpress/.ssh/authorized_keys
+
+# Permissions
 chown -R www-data:www-data /mnt/efs/wordpress
-find /mnt/efs/wordpress -type d -exec chmod 755 {} \;
-find /mnt/efs/wordpress -type f -exec chmod 644 {} \;
+find /mnt/efs/wordpress -type d -exec chmod 2775 {} \;
+find /mnt/efs/wordpress -type f -exec chmod 664 {} \;
+find /mnt/efs/wordpress -type d -exec chmod g+s {} \;
+setfacl -R -m g:www-data:rwx /mnt/efs/wordpress
+setfacl -R -m d:g:www-data:rwx /mnt/efs/wordpress
+echo "umask 0002" >> /home/wordpress/.bashrc
+grep -qxF 'umask 0002' /etc/apache2/envvars || echo 'umask 0002' >> /etc/apache2/envvars
 
 # db connect helper
 cat <<'EOF' > /usr/local/bin/connect-to-db

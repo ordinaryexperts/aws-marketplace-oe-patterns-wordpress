@@ -1,11 +1,12 @@
 # Unreleased
 
 * Use v4 of upload-artifact github action
-* Upgrade to WordPress 6.7
+* Upgrade to WordPress 6.7.2
 * Require DNS Parameters
 * Fix loopback errors when restricting ALB CIDR
 * Fix tests again
 * Upgrade to Docker Compose V2
+* Support SFTP via NLB
 
 # 2.0.0
 

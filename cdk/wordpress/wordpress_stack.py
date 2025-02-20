@@ -202,6 +202,7 @@ class WordPressStack(Stack):
             self,
             "Asg",
             additional_iam_role_policies=[asg_update_secret_policy, asg_read_ssm_parameter_policy],
+            default_instance_type = "m5.large",
             deployment_rolling_update = True,
             secret_arns=[db_secret.secret_arn(), ses.secret_arn()],
             use_graviton=False,

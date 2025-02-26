@@ -35,9 +35,13 @@ In order for changes in the SSM Parameter value to be deployed to the WordPress 
 
 ### SFTP Access
 
+There are two ways you can transfer files to the instance, either using AWS Systems Manager or native SFTP.
+
+#### AWS Systems Manager
+
 In order to transfer files between a local workstation and the EC2 instance, similar to an SFTP experience, the AWS Systems Manager can be used to forward the SFTP traffic from the EC2 instance to a local computer.
 
-For this to work, the stack must be configured to use the AsgKeyName parameter to specify an AWS Key Pair that can be used when connecting to the instance.
+For this to work, the stack must be configured to use the `AsgKeyName` parameter to specify an AWS Key Pair that can be used when connecting to the instance.
 
 To do so, first find the instance id from the AWS console for the WordPress server.
 
@@ -58,7 +62,17 @@ Then, configure an SFTP client with:
 * Hostname: 127.0.0.1
 * Port: 2222
 * Username: ubuntu
-* Auth Method: Public Key - select the PEM file from the Key Pair indicated in the AsgKeyName parameter
+* Auth Method: Public Key - select the PEM file from the Key Pair indicated in the `AsgKeyName` parameter
+
+#### Native SFTP
+
+Alternatively, if you set the `EnableSftp` parameter to `"true"`, the stack will create a Network Load Balancer (NLB) listening on port 22. This NLB routes SFTP traffic to a restricted `wordpress` user chrooted into WordPress directory, using the same public key that was passed in the `AsgKeyName` parameter.
+
+After the stack deploys, check the `SftpEndpoint` output in CloudFormation. You can then connect with:
+```
+sftp -i /path/to/your-key-file wordpress@<SftpEndpoint>
+```
+Replace `<SftpEndpoint>` with the DNS name from the CloudFormation output.
 
 ## Stack Infrastructure
 

@@ -13,6 +13,7 @@ rm $SCRIPT_PREINSTALL
 # start WordPress specific stuff
 apt-get update && apt-get -y upgrade
 apt-get install -y --no-install-recommends \
+    acl \
     autoconf \
     ca-certificates \
     curl \
@@ -64,7 +65,7 @@ EOF
 a2enmod rewrite
 a2enmod ssl
 
-WORDPRESS_VERSION=6.7
+WORDPRESS_VERSION=6.7.2
 
 # download WordPress
 curl https://wordpress.org/wordpress-$WORDPRESS_VERSION.zip -o /root/wordpress-$WORDPRESS_VERSION.zip
@@ -212,6 +213,28 @@ ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"proce
         php_value upload_max_filesize 100M
 </VirtualHost>
 EOF
+
+# wordpress user
+groupadd -g 2000 wordpress
+useradd \
+  --create-home \
+  --home /home/wordpress \
+  --comment "WordPress User" \
+  --uid 2000 \
+  --gid wordpress \
+  --shell /bin/bash \
+  wordpress
+
+sed -i 's|^Subsystem\s\+sftp\s\+.*|Subsystem sftp internal-sftp|' /etc/ssh/sshd_config
+sed -i '/^Subsystem.*internal-sftp/a \
+Match User wordpress\n\tChrootDirectory /mnt/efs\n\tForceCommand internal-sftp\n\tX11Forwarding no\n\tAllowTcpForwarding no\n' /etc/ssh/sshd_config
+
+# Add wordpress to www-data group
+usermod -aG www-data wordpress
+
+mkdir /home/wordpress/.ssh
+chmod 700 /home/wordpress/.ssh
+chown wordpress:wordpress /home/wordpress/.ssh
 
 a2ensite wordpress
 

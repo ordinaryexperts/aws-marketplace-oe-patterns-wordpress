@@ -1,5 +1,7 @@
 # Unreleased
 
+# 2.1.0
+
 * Use v4 of upload-artifact github action
 * Upgrade to WordPress 6.7.2
 * Require DNS Parameters

@@ -76,7 +76,7 @@ Replace `<SftpEndpoint>` with the DNS name from the CloudFormation output.
 
 ## Stack Infrastructure
 
-![Topology Diagram](docs/oe-wordpress-diagram-2.0.0.png)
+![Topology Diagram](docs/oe-wordpress-diagram-2.1.0.png)
 
 ## Developer Setup
 

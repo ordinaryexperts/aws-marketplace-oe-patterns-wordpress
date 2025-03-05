@@ -9,6 +9,8 @@
 * Fix tests again
 * Upgrade to Docker Compose V2
 * Support SFTP via NLB
+* Upgrade oe-patterns-cdk-common to 4.2.0
+* Add AsgAmiId param for self-service marketplace support
 
 # 2.0.0
 

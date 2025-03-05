@@ -1,5 +1,17 @@
 # Unreleased
 
+# 2.1.0
+
+* Use v4 of upload-artifact github action
+* Upgrade to WordPress 6.7.2
+* Require DNS Parameters
+* Fix loopback errors when restricting ALB CIDR
+* Fix tests again
+* Upgrade to Docker Compose V2
+* Support SFTP via NLB
+* Upgrade oe-patterns-cdk-common to 4.2.0
+* Add AsgAmiId param for self-service marketplace support
+
 # 2.0.0
 
 * fix region tests

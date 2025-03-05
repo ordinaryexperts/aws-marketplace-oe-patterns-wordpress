@@ -14,7 +14,7 @@ Automatically configured to support auto-scaling through AWS Auto Scaling Groups
 The template ensures multi-level security by incorporating AWS IAM for federated access to resources with least privilege and AWS managed keys and Secret Manager to manage secrets for encryption of data at rest and in transit.
 
 We support multiple availability zones using an RDS Aurora MySQL cluster and EC2 Auto Scaling Groups."
-"Highlight1": "Production-ready 6.6.1 WordPress site."
+"Highlight1": "Production-ready 6.7 WordPress site."
 "Highlight2": "Integrated with AWS Certificate Manager for HTTPS support."
 "Highlight3": "Logs in CloudWatch Logs, Remote SSH/SFTP via Session Manager."
 "Product Category1": "Application Stacks"

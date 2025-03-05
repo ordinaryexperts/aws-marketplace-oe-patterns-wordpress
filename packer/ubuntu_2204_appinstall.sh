@@ -1,8 +1,8 @@
 #!/bin/bash -eux
 
-SCRIPT_VERSION=1.5.0
-SCRIPT_PREINSTALL=ubuntu_2004_2204_preinstall.sh
-SCRIPT_POSTINSTALL=ubuntu_2004_2204_postinstall.sh
+SCRIPT_VERSION=1.6.0
+SCRIPT_PREINSTALL=ubuntu_2204_2404_preinstall.sh
+SCRIPT_POSTINSTALL=ubuntu_2204_2404_postinstall.sh
 
 # preinstall steps
 curl -O "https://raw.githubusercontent.com/ordinaryexperts/aws-marketplace-utilities/$SCRIPT_VERSION/packer_provisioning_scripts/$SCRIPT_PREINSTALL"
@@ -13,6 +13,7 @@ rm $SCRIPT_PREINSTALL
 # start WordPress specific stuff
 apt-get update && apt-get -y upgrade
 apt-get install -y --no-install-recommends \
+    acl \
     autoconf \
     ca-certificates \
     curl \
@@ -64,15 +65,17 @@ EOF
 a2enmod rewrite
 a2enmod ssl
 
+WORDPRESS_VERSION=6.7.2
+
 # download WordPress
-curl https://wordpress.org/wordpress-6.6.1.zip -o /root/wordpress-6.6.1.zip
-unzip /root/wordpress-6.6.1.zip -d /root
+curl https://wordpress.org/wordpress-$WORDPRESS_VERSION.zip -o /root/wordpress-$WORDPRESS_VERSION.zip
+unzip /root/wordpress-$WORDPRESS_VERSION.zip -d /root
 # remove unused plugins
 rm /root/wordpress/wp-content/plugins/hello.php
 rm -rf /root/wordpress/wp-content/plugins/akismet
 # remove unused themes
-rm -rf /root/wordpress/wp-content/themes/twentytwentytwo
 rm -rf /root/wordpress/wp-content/themes/twentytwentythree
+rm -rf /root/wordpress/wp-content/themes/twentytwentyfour
 # upgrade folder
 mkdir -p /root/wordpress/wp-content/upgrade
 chown -R www-data:www-data /root/wordpress
@@ -210,6 +213,28 @@ ErrorLogFormat "{\"time\":\"%{%usec_frac}t\", \"function\":\"[%-m:%l]\", \"proce
         php_value upload_max_filesize 100M
 </VirtualHost>
 EOF
+
+# wordpress user
+groupadd -g 2000 wordpress
+useradd \
+  --create-home \
+  --home /home/wordpress \
+  --comment "WordPress User" \
+  --uid 2000 \
+  --gid wordpress \
+  --shell /bin/bash \
+  wordpress
+
+sed -i 's|^Subsystem\s\+sftp\s\+.*|Subsystem sftp internal-sftp|' /etc/ssh/sshd_config
+sed -i '/^Subsystem.*internal-sftp/a \
+Match User wordpress\n\tChrootDirectory /mnt/efs\n\tForceCommand internal-sftp\n\tX11Forwarding no\n\tAllowTcpForwarding no\n' /etc/ssh/sshd_config
+
+# Add wordpress to www-data group
+usermod -aG www-data wordpress
+
+mkdir /home/wordpress/.ssh
+chmod 700 /home/wordpress/.ssh
+chown wordpress:wordpress /home/wordpress/.ssh
 
 a2ensite wordpress
 

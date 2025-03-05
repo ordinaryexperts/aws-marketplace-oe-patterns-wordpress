@@ -35,7 +35,7 @@ else:
     except:
         template_version = "CICD"
 
-AMI_ID="ami-004016a64b67ef08b" # ordinary-experts-patterns-wordpress-2.1.0-20250305-0314
+AMI_ID="ami-07f9115ef88558053" # ordinary-experts-patterns-wordpress-2.1.0-20250305-0611
 
 class WordPressStack(Stack):
 

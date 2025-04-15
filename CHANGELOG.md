@@ -1,5 +1,7 @@
 # Unreleased
 
+* Upgrade oe-patterns-cdk-common to 4.2.4 (EFS elastic throughput)
+
 # 2.1.0
 
 * Use v4 of upload-artifact github action

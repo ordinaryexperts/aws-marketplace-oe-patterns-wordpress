@@ -16,6 +16,8 @@ deploy: build
 	--parameters CustomWpConfigParameterArn=arn:aws:ssm:us-east-1:992593896645:parameter/oe-patterns-wordpress-dylan-custom-wp-config \
 	--parameters DnsHostname=wordpress-${USER}.dev.patterns.ordinaryexperts.com \
 	--parameters DnsRoute53HostedZoneName=dev.patterns.ordinaryexperts.com \
+	--parameters EnableSftp="true" \
+	--parameters SftpIngressCidr=0.0.0.0/0 \
 	--parameters VpcId=vpc-00425deda4c835455 \
 	--parameters VpcPrivateSubnet1Id=subnet-030c94b9795c6cb96 \
 	--parameters VpcPrivateSubnet2Id=subnet-079290412ce63c4d5 \

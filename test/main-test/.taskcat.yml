@@ -14,6 +14,7 @@ tests:
       DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
       PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-2zppaw3wi3sx
       SesCreateDomainIdentity: "false"
+      SftpIngressCidr: 0.0.0.0/0
       SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
       SourceArtifactObjectKey: develop-wordpress.zip
       VpcId: vpc-00425deda4c835455

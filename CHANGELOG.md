@@ -1,6 +1,7 @@
 # Unreleased
 
 * Upgrade oe-patterns-cdk-common to 4.2.4 (EFS elastic throughput)
+* EFS permission fixes
 
 # 2.1.0
 

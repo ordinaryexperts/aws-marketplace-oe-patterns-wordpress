@@ -17,9 +17,4 @@ deploy: build
 	--parameters DnsHostname=wordpress-${USER}.dev.patterns.ordinaryexperts.com \
 	--parameters DnsRoute53HostedZoneName=dev.patterns.ordinaryexperts.com \
 	--parameters EnableSftp="true" \
-	--parameters SftpIngressCidr=0.0.0.0/0 \
-	--parameters VpcId=vpc-00425deda4c835455 \
-	--parameters VpcPrivateSubnet1Id=subnet-030c94b9795c6cb96 \
-	--parameters VpcPrivateSubnet2Id=subnet-079290412ce63c4d5 \
-	--parameters VpcPublicSubnet1Id=subnet-0c2f5d4daa1792c8d \
-	--parameters VpcPublicSubnet2Id=subnet-060c39a6ded9e89d7 \
+	--parameters SftpIngressCidr=0.0.0.0/0

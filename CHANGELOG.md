@@ -2,6 +2,8 @@
 
 * Upgrade oe-patterns-cdk-common to 4.2.4 (EFS elastic throughput)
 * EFS permission fixes
+* Upgrade to WordPress 6.8.1
+* Increase root volume size
 
 # 2.1.0
 

@@ -1,6 +1,11 @@
 #!/bin/bash -eux
+# Packer's execute_command invokes this as `bash <path>`, which makes the
+# shebang's flags a no-op. Re-enable errexit/nounset/xtrace explicitly so
+# provisioning failures abort the build instead of silently shipping a
+# broken AMI.
+set -eux
 
-SCRIPT_VERSION=1.6.0
+SCRIPT_VERSION=1.10.3
 SCRIPT_PREINSTALL=ubuntu_2204_2404_preinstall.sh
 SCRIPT_POSTINSTALL=ubuntu_2204_2404_postinstall.sh
 
@@ -65,7 +70,7 @@ EOF
 a2enmod rewrite
 a2enmod ssl
 
-WORDPRESS_VERSION=6.7.2
+WORDPRESS_VERSION=6.9.4
 
 # download WordPress
 curl https://wordpress.org/wordpress-$WORDPRESS_VERSION.zip -o /root/wordpress-$WORDPRESS_VERSION.zip

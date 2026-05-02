@@ -12,7 +12,5 @@ tests:
       AlbIngressCidr: 0.0.0.0/0
       DnsHostname: "oe-patterns-wordpress-taskcat-$[taskcat_random-string].dev.patterns.ordinaryexperts.com"
       DnsRoute53HostedZoneName: dev.patterns.ordinaryexperts.com
-      PipelineArtifactBucketName: github-user-and-bucket-taskcatbucket-2zppaw3wi3sx
       SesCreateDomainIdentity: "false"
-      SourceArtifactBucketName: github-user-and-bucket-githubartifactbucket-wl52dae3lyub
-      SourceArtifactObjectKey: develop-wordpress.zip
+      SftpIngressCidr: 0.0.0.0/0

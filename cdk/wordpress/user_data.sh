@@ -315,9 +315,6 @@ chown wordpress:wordpress /home/wordpress/.ssh/authorized_keys
 chown -R www-data:www-data /mnt/efs/wordpress
 find /mnt/efs/wordpress -type d -exec chmod 2775 {} \;
 find /mnt/efs/wordpress -type f -exec chmod 664 {} \;
-find /mnt/efs/wordpress -type d -exec chmod g+s {} \;
-setfacl -R -m g:www-data:rwx /mnt/efs/wordpress
-setfacl -R -m d:g:www-data:rwx /mnt/efs/wordpress
 echo "umask 0002" >> /home/wordpress/.bashrc
 grep -qxF 'umask 0002' /etc/apache2/envvars || echo 'umask 0002' >> /etc/apache2/envvars
 

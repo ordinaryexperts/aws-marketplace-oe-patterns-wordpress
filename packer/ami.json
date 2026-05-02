@@ -12,7 +12,13 @@
       "source_ami": "ami-06a1f46caddb5669e",
       "instance_type": "m5.xlarge",
       "ssh_username": "ubuntu",
-      "ami_name": "ordinary-experts-patterns-wordpress-{{user `version`}}-{{isotime \"20060102-0304\"}}"
+      "ami_name": "ordinary-experts-patterns-wordpress-{{user `version`}}-{{isotime \"20060102-0304\"}}",
+      "launch_block_device_mappings": [{
+        "device_name": "/dev/sda1",
+        "volume_type": "gp2",
+        "volume_size": 40,
+        "delete_on_termination": true
+      }]
     }
   ],
   "provisioners": [

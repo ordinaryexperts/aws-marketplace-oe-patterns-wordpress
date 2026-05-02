@@ -25,8 +25,6 @@ from oe_patterns_cdk_common.ses import Ses
 from oe_patterns_cdk_common.util import Util
 from oe_patterns_cdk_common.vpc import Vpc
 
-DEFAULT_WORDPRESS_SOURCE_URL="https://ordinary-experts-aws-marketplace-wordpress-pattern-artifacts.s3.amazonaws.com/aws-marketplace-oe-patterns-wordpress-default/refs/tags/6.5.5.zip"
-TWO_YEARS_IN_DAYS=731
 if 'TEMPLATE_VERSION' in os.environ:
     template_version = os.environ['TEMPLATE_VERSION']
 else:
@@ -35,7 +33,9 @@ else:
     except:
         template_version = "CICD"
 
-AMI_ID="ami-0ed9565c7b742d39a" # ordinary-experts-patterns-wordpress-2.1.0-12-gb43d9ee-20250617-0807
+# Updated each release in Phase 3 (dev AMI) and Phase 6 prereqs (prod AMI).
+AMI_ID="ami-0f390a711d584012f" # ordinary-experts-patterns-wordpress-3.0.0-20260502 (dev AMI)
+NEXT_RELEASE_PREFIX = "v300"
 
 class WordPressStack(Stack):
 
@@ -152,6 +152,7 @@ class WordPressStack(Stack):
             "Asg",
             additional_iam_role_policies=[asg_update_secret_policy, asg_read_ssm_parameter_policy],
             ami_id=AMI_ID,
+            ami_id_param_name_suffix=NEXT_RELEASE_PREFIX,
             default_instance_type = "m5.large",
             deployment_rolling_update = True,
             secret_arns=[db_secret.secret_arn(), ses.secret_arn()],

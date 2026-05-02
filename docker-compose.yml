@@ -4,9 +4,11 @@ services:
     volumes:
     - .:/code
     - /var/run/docker.sock:/var/run/docker.sock
+    - ${HOME}/.aws:/root/.aws:ro
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_DEFAULT_REGION
+      - AWS_PROFILE
       - AWS_REGION
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN

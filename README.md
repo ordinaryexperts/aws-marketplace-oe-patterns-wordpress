@@ -1,8 +1,10 @@
 ![Ordinary Experts Logo](https://ordinaryexperts.com/img/logo.png)
 
-# WordPress on AWS Pattern
+# WordPress on AWS by FOSSonCloud
 
-The Ordinary Experts WordPress Pattern is an open-source AWS CloudFormation template + custom AMI that offers an easy-to-install AWS infrastructure solution for quickly deploying a WordPress site.
+A FOSSonCloud AWS Marketplace Product.
+
+WordPress on AWS by FOSSonCloud is an open-source AWS CloudFormation template + custom AMI that offers an easy-to-install AWS infrastructure solution for quickly deploying a production-ready WordPress site.
 
 * [WordPress](https://wordpress.org/) is open source software you can use to create a beautiful website, blog, or app.
 

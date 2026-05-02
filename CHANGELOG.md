@@ -1,9 +1,36 @@
 # Unreleased
 
-* Upgrade oe-patterns-cdk-common to 4.2.4 (EFS elastic throughput)
-* EFS permission fixes
-* Upgrade to WordPress 6.8.1
-* Increase root volume size
+# 3.0.0
+
+Major modernization release bringing the pattern current with the latest WordPress, devenv tooling, and the Marketplace Catalog API workflow.
+
+**Stack components**
+
+* WordPress 6.9.4 (was 6.7.2)
+* Apache 2.4 / PHP 8.1 / Ubuntu 22.04 (unchanged)
+* `aws-cdk-lib` 2.225.0 (was 2.120.0)
+* `oe-patterns-cdk-common` 4.5.1 (was 4.2.4); EFS elastic throughput defaults from 4.2.4 are retained
+* devenv image 2.8.4 (was 2.5.5); requires `--break-system-packages` for pip on Ubuntu 24.04 base
+* `aws-marketplace-utilities` packer scripts 1.10.3 (was 1.6.0); fixes silent `--install-efs-utils` failures (rustup PATH under `sudo -E`, missing `cmake` and `golang-go` for `aws-lc-fips-sys` build, explicit `.deb` existence check)
+
+**Breaking changes for existing 2.x deployments**
+
+* AMI parameter renamed `AsgAmiId` -> `AsgAmiIdv300`. Existing 2.x stacks cannot be updated in place - a 3.0.0 stack must be deployed fresh.
+* Aurora MySQL engine version may be bumped by the upgraded `oe-patterns-cdk-common`; existing stacks should expect a maintenance-window apply.
+
+**New behavior**
+
+* Versioned AMI parameter convention introduced (`NEXT_RELEASE_PREFIX = "v300"`, `ami_id_param_name_suffix` on `Asg`) so each release has a distinct parameter name and CloudFormation can't silently reuse the prior AMI.
+* AWS Marketplace submission flow ready for the Catalog API (`make marketplace-validate` / `marketplace-submit` / `marketplace-status`); pattern publishing is no longer driven by the deprecated `plf_config.yaml` spreadsheet flow.
+* `test/integration/` playwright scaffold added; `make test-integration` runs an end-to-end smoke test (install wizard -> admin login -> Gutenberg post -> public render) against the deployed dev stack.
+* Packer appinstall script now sets `set -eux` explicitly so provisioning failures abort the build instead of silently shipping a broken AMI (packer's `execute_command` invokes the script as `bash <path>`, which treats the shebang as a comment).
+* `docker-compose.yml` now mounts `~/.aws` and forwards `AWS_PROFILE`, matching the Mastodon/Drupal patterns; previously this repo required exporting individual `AWS_*` vars.
+
+**Removed / cleanup**
+
+* Dropped dead `DEFAULT_WORDPRESS_SOURCE_URL` constant from `wordpress_stack.py`. The pre-2.0.0 CodePipeline + CodeDeploy + Lambda seed-bucket flow was removed in 2.0.0; the constant lingered but was never read. Pattern install path is now the AMI-baked WordPress copied to EFS at first boot.
+* Stripped stale `PipelineArtifactBucketName` / `SourceArtifactBucketName` / `SourceArtifactObjectKey` parameters from `test/.taskcat.yml` and `test/main-test/.taskcat.yml` - leftover from the same pre-2.0.0 pipeline flow.
+* Folded the previously unreleased work (WordPress 6.8.1, EFS permission fixes, root volume size increase, oe-patterns-cdk-common 4.2.4) into this release.
 
 # 2.1.0
 

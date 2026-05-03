@@ -4,6 +4,10 @@
 
 product_id: "f3bfa640-c230-4a34-9c4a-91d4a98f9a2e"
 
+# Public HTTPS URL to the product logo image (PNG). Consumed by scripts/marketplace_rebrand.py.
+# Identical across all FOSSonCloud patterns — the same file lives at a single S3 object.
+logo_url: "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/fossoncloud-logo.png"
+
 # IAM role that allows AWS Marketplace to read the AMI
 ami_access_role_arn: "arn:aws:iam::879777583535:role/AWSMarketplaceAMIScanning"
 
@@ -62,3 +66,51 @@ delivery_option:
     - Route 53 hosted zone for DNS
     - ACM certificate for HTTPS
   architecture_diagram_url: "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/wordpress/3.0.0/diagram.png"
+
+# Rebrand metadata — consumed by scripts/marketplace_rebrand.py in utilities 1.9.4+
+product_info:
+  title: "WordPress on AWS by FOSSonCloud"
+  short_description: >-
+    WordPress on AWS by FOSSonCloud is a custom AMI + open-source AWS CloudFormation
+    template that provisions a production-ready, AWS infrastructure solution for
+    deploying WordPress 6.9.4.
+  long_description: |
+    WordPress on AWS by FOSSonCloud is an open-source AWS CloudFormation template that
+    offers an easy-to-install AWS infrastructure solution for quickly deploying
+    WordPress, using both AWS and WordPress best practices.
+
+    Automatically configured to support auto-scaling through AWS Auto Scaling Groups,
+    this solution leverages an EFS file system to share user generated content and
+    application files (wp-content) between application servers, and SES for sending
+    outbound email. An optional NLB-fronted SFTP endpoint is available for direct
+    file transfer onto the EFS volume.
+
+    The template ensures multi-level security by incorporating AWS IAM for federated
+    access to resources with least privilege, AWS managed keys, and Secrets Manager
+    to manage credentials for encryption of data at rest and in transit.
+
+    We support multiple availability zones using an RDS Aurora MySQL cluster and
+    EC2 Auto Scaling Groups.
+  highlights:
+    - "Production-ready WordPress 6.9.4 site on Apache + PHP 8.1"
+    - "Integrated with AWS Certificate Manager for HTTPS support"
+    - "Logs in CloudWatch Logs, remote access via Session Manager, optional SFTP via NLB"
+  categories:
+    - "Application Stacks"
+    - "Application Development"
+    - "Content Management"
+  search_keywords:
+    - "wordpress"
+    - "cms"
+    - "blog"
+  resources:
+    - name: "FOSSonCloud Product Page"
+      url:  "https://fossoncloud.com/products/wordpress"
+    - name: "Github Source Code and Documentation"
+      url:  "https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-wordpress"
+    - name: "WordPress Homepage"
+      url:  "https://wordpress.org"
+  support_description: |
+    Email support offered with subscription.
+    https://fossoncloud.com/products/wordpress
+  sku: "OE_PATTERNS_WORDPRESS"

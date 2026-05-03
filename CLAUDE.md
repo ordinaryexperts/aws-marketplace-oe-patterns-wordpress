@@ -8,7 +8,7 @@ AWS Marketplace pattern that deploys a production-ready WordPress site via Cloud
 
 1. **Custom AMI** built with Packer (Ubuntu 22.04 with Apache + PHP 8.1 + WordPress pre-installed at `/root/wordpress`)
 2. **CDK Infrastructure** (Python) that synthesizes to CloudFormation
-3. **Marketplace listing** — currently `plf_config.yaml` (deprecated); new releases should use `marketplace_config.yaml` consumed by `scripts/marketplace.py` in the devenv image (see Upgrade Workflow)
+3. **Marketplace listing** — `marketplace_config.yaml` (consumed by `scripts/marketplace.py` in the devenv image; see Upgrade Workflow). The legacy `plf_config.yaml` was removed in 3.0.0.
 
 The infrastructure deploys: VPC, ALB, Auto Scaling Group, Aurora MySQL, EFS (shared `wp-content`), SES (msmtp), Route53/ACM, optional NLB-fronted SFTP, and supporting services (IAM, Secrets Manager, SSM).
 
@@ -53,8 +53,6 @@ The `~/.aws` directory is mounted; use `AWS_PROFILE=oe-patterns-dev make <target
 ### Testing
 - `make test-main` — taskcat regression run (`test/main-test/.taskcat.yml`, region `us-east-1`)
 
-### Old PLF flow (deprecated, only present in this repo until `marketplace_config.yaml` is introduced)
-- `make gen-plf` / `make plf` — Excel/CSV-based product update; superseded by `marketplace.py`
 
 ## Architecture
 
@@ -106,14 +104,6 @@ This repo currently uses bare `AsgAmiId`. On the next release, introduce `NEXT_R
 - Main branch: **`develop`** (not `main`)
 - git-flow: feature → develop → release/X.Y.Z → tags (release branch stays open through Phase 6 of UPGRADE.md)
 - AMI ID + comment in `cdk/wordpress/wordpress_stack.py` are updated each release (dev AMI for taskcat on `develop`; prod AMI swapped in temporarily for the Marketplace submit, then dev AMI restored)
-
-## Known repo state to address on next upgrade
-
-- `Dockerfile` pins `ordinaryexperts/aws-marketplace-patterns-devenv:2.5.5` — bump to `:2.8.3` or newer; add `--break-system-packages` to `pip3 install` (PEP 668 on Ubuntu 24.04 base).
-- `cdk/setup.py`: `aws-cdk-lib==2.120.0`, `oe-patterns-cdk-common@4.2.4` — bump (Drupal uses `2.225.0` / `4.5.1`).
-- `Makefile` `update-common` URL pins utilities `1.6.0` — bump to current.
-- Migrate from `plf_config.yaml` to `marketplace_config.yaml` (delivery_option block required for `marketplace-submit`). Keep the old `gen-plf*` Make targets working until the new flow is verified.
-- Brand alignment: README / marketplace title still says "Ordinary Experts WordPress Pattern" / "WordPress on AWS Pattern". Target FOSSonCloud branding is **"WordPress on AWS by FOSSonCloud"** (see UPGRADE.md "Brand alignment check").
 
 ## Files updated each release
 

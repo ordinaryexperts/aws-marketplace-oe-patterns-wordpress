@@ -34,8 +34,8 @@ else:
         template_version = "CICD"
 
 # Updated each release in Phase 3 (dev AMI) and Phase 6 prereqs (prod AMI).
-AMI_ID="ami-0f390a711d584012f" # ordinary-experts-patterns-wordpress-3.0.0-20260502 (dev AMI for taskcat — restored post-3.0.0 release)
-NEXT_RELEASE_PREFIX = "v300"
+AMI_ID="ami-04cc4d2c12582024a" # ordinary-experts-patterns-wordpress-3.1.0-20260720-0905 (dev AMI, WordPress 7.0.2)
+NEXT_RELEASE_PREFIX = "v310"
 
 class WordPressStack(Stack):
 

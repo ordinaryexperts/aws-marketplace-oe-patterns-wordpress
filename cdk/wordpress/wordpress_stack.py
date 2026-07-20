@@ -34,7 +34,7 @@ else:
         template_version = "CICD"
 
 # Updated each release in Phase 3 (dev AMI) and Phase 6 prereqs (prod AMI).
-AMI_ID="ami-04cc4d2c12582024a" # ordinary-experts-patterns-wordpress-3.1.0-20260720-0905 (dev AMI, WordPress 7.0.2)
+AMI_ID="ami-088a1dc0c46a98eb9" # ordinary-experts-patterns-wordpress-3.1.0-20260720 (prod AMI for Marketplace submission, WordPress 7.0.2)
 NEXT_RELEASE_PREFIX = "v310"
 
 class WordPressStack(Stack):

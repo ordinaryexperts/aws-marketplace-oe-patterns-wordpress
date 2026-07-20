@@ -8,7 +8,7 @@ deploy: build
 	--require-approval never \
 	--parameters AlbCertificateArn=arn:aws:acm:us-east-1:992593896645:certificate/943928d7-bfce-469c-b1bf-11561024580e \
 	--parameters AlbIngressCidr=0.0.0.0/0 \
-	--parameters AsgAmiIdv300=ami-0f390a711d584012f \
+	--parameters AsgAmiIdv310=ami-04cc4d2c12582024a \
 	--parameters AsgDesiredCapacity=1 \
 	--parameters AsgKeyName=oe-patterns-dev-dylan-us-east-1 \
 	--parameters AsgMaxSize=2 \

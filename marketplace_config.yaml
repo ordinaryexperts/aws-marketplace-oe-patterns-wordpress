@@ -4,6 +4,10 @@
 
 product_id: "f3bfa640-c230-4a34-9c4a-91d4a98f9a2e"
 
+# Public HTTPS URL to the product logo image (PNG). Consumed by scripts/marketplace_rebrand.py.
+# Identical across all FOSSonCloud patterns — the same file lives at a single S3 object.
+logo_url: "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/fossoncloud-logo.png"
+
 # IAM role that allows AWS Marketplace to read the AMI
 ami_access_role_arn: "arn:aws:iam::879777583535:role/AWSMarketplaceAMIScanning"
 
@@ -41,13 +45,13 @@ delivery_option:
   long_description: |
     WordPress on AWS by FOSSonCloud deploys a production-ready WordPress site using AWS best practices.
 
-    WordPress 6.9.4 is baked into the custom AMI. On first boot, the codebase is copied to EFS and Apache serves from /var/www/wordpress (a symlink into EFS). The WordPress install wizard runs once; database credentials are pre-configured. Customer code changes happen via the WordPress admin UI, via SSM Session Manager onto an instance, or — with EnableSftp=true — via the chrooted `wordpress` user over the optional NLB-fronted SFTP endpoint.
+    WordPress 7.0.2 is baked into the custom AMI. On first boot, the codebase is copied to EFS and Apache serves from /var/www/wordpress (a symlink into EFS). The WordPress install wizard runs once; database credentials are pre-configured. Customer code changes happen via the WordPress admin UI, via SSM Session Manager onto an instance, or — with EnableSftp=true — via the chrooted `wordpress` user over the optional NLB-fronted SFTP endpoint.
 
     WHAT'S DEPLOYED
 
     - VPC with public and private subnets (or bring your own VPC)
     - Application Load Balancer with ACM certificate for HTTPS
-    - Auto Scaling Group running Apache 2.4 + PHP 8.1 + WordPress 6.9.4 (Ubuntu 22.04)
+    - Auto Scaling Group running Apache 2.4 + PHP 8.1 + WordPress 7.0.2 (Ubuntu 22.04)
     - Aurora MySQL 8.0 cluster (multi-AZ)
     - EFS for shared wp-content (uploads, themes, plugins) — mounted across all instances
     - SES domain identity + msmtp on the instance for outbound email (password reset, notifications)
@@ -61,4 +65,52 @@ delivery_option:
 
     - Route 53 hosted zone for DNS
     - ACM certificate for HTTPS
-  architecture_diagram_url: "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/wordpress/3.0.0/diagram.png"
+  architecture_diagram_url: "https://ordinary-experts-aws-marketplace-pattern-artifacts.s3.amazonaws.com/wordpress/3.1.0/diagram.png"
+
+# Rebrand metadata — consumed by scripts/marketplace_rebrand.py in utilities 1.9.4+
+product_info:
+  title: "WordPress on AWS by FOSSonCloud"
+  short_description: >-
+    WordPress on AWS by FOSSonCloud is a custom AMI + open-source AWS CloudFormation
+    template that provisions a production-ready, AWS infrastructure solution for
+    deploying WordPress 7.0.2.
+  long_description: |
+    WordPress on AWS by FOSSonCloud is an open-source AWS CloudFormation template that
+    offers an easy-to-install AWS infrastructure solution for quickly deploying
+    WordPress, using both AWS and WordPress best practices.
+
+    Automatically configured to support auto-scaling through AWS Auto Scaling Groups,
+    this solution leverages an EFS file system to share user generated content and
+    application files (wp-content) between application servers, and SES for sending
+    outbound email. An optional NLB-fronted SFTP endpoint is available for direct
+    file transfer onto the EFS volume.
+
+    The template ensures multi-level security by incorporating AWS IAM for federated
+    access to resources with least privilege, AWS managed keys, and Secrets Manager
+    to manage credentials for encryption of data at rest and in transit.
+
+    We support multiple availability zones using an RDS Aurora MySQL cluster and
+    EC2 Auto Scaling Groups.
+  highlights:
+    - "Production-ready WordPress 7.0.2 site on Apache + PHP 8.1"
+    - "Integrated with AWS Certificate Manager for HTTPS support"
+    - "Logs in CloudWatch Logs, remote access via Session Manager, optional SFTP via NLB"
+  categories:
+    - "Application Stacks"
+    - "Application Development"
+    - "Content Management"
+  search_keywords:
+    - "wordpress"
+    - "cms"
+    - "blog"
+  resources:
+    - name: "FOSSonCloud Product Page"
+      url:  "https://fossoncloud.com/products/wordpress"
+    - name: "Github Source Code and Documentation"
+      url:  "https://github.com/ordinaryexperts/aws-marketplace-oe-patterns-wordpress"
+    - name: "WordPress Homepage"
+      url:  "https://wordpress.org"
+  support_description: |
+    Email support offered with subscription.
+    https://fossoncloud.com/products/wordpress
+  sku: "OE_PATTERNS_WORDPRESS"

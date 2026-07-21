@@ -1,5 +1,14 @@
 # Unreleased
 
+# 3.1.0
+
+Upgrade WordPress to the latest stable release.
+
+* WordPress 7.0.2 (was 6.9.4)
+* AMI parameter renamed `AsgAmiIdv300` -> `AsgAmiIdv310` (routine per-release rename; not a breaking change on its own, but as with any AMI swap, existing stacks pick up the new AMI only on next `AsgReprovisionString` bump / instance replacement)
+
+No CDK library changes (`aws-cdk-lib` 2.225.0, `oe-patterns-cdk-common` 4.5.1 unchanged) and no CloudFormation parameter/resource changes beyond the AMI parameter rename.
+
 # 3.0.0
 
 Major modernization release bringing the pattern current with the latest WordPress, devenv tooling, and the Marketplace Catalog API workflow.

@@ -4,7 +4,7 @@ with open("README.md") as fp:
     long_description = fp.read()
 
 CDK_VERSION="2.225.0"
-OE_PATTERNS_CDK_COMMON_VERSION="4.5.1"
+OE_PATTERNS_CDK_COMMON_VERSION="4.5.2"
 
 setuptools.setup(
     name="wordpress",
